@@ -4,13 +4,15 @@ import type { Plugin, PluginContext } from '../types/index.js';
  * 生成 Vite 配置文件内容
  */
 function getViteConfig(context: PluginContext): string {
-  const { projectType } = context;
+  const { projectType, stateManager } = context;
 
+  // React 项目的 monorepo 配置
   if (projectType === 'react') {
     return `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';
 import autoprefixer from 'autoprefixer';
+import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -20,6 +22,16 @@ export default defineConfig({
       targets: ['defaults', 'not IE 11'],
     }),
   ],
+  resolve: {
+    alias: {
+      shared: resolve(__dirname, 'packages/shared/src'),
+      ui: resolve(__dirname, 'packages/ui/src'),
+    },
+    dedupe: ['react', 'react-dom', 'react-router-dom'],
+  },
+  optimizeDeps: {
+    include: ['shared', 'ui'],
+  },
   css: {
     postcss: {
       plugins: [autoprefixer()],
@@ -28,6 +40,9 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+    watch: {
+      ignored: ['!**/node_modules/**', '!**/packages/**'],
+    },
   },
   build: {
     sourcemap: true,
@@ -36,11 +51,17 @@ export default defineConfig({
 `;
   }
 
+  // Vue 项目的 monorepo 配置
   if (projectType === 'vue') {
+    const dedupeList = stateManager === 'pinia' 
+      ? "'vue', 'vue-router', 'pinia'" 
+      : "'vue', 'vue-router'";
+    
     return `import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import legacy from '@vitejs/plugin-legacy';
 import autoprefixer from 'autoprefixer';
+import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -50,6 +71,16 @@ export default defineConfig({
       targets: ['defaults', 'not IE 11'],
     }),
   ],
+  resolve: {
+    alias: {
+      shared: resolve(__dirname, 'packages/shared/src'),
+      ui: resolve(__dirname, 'packages/ui/src'),
+    },
+    dedupe: [${dedupeList}],
+  },
+  optimizeDeps: {
+    include: ['shared', 'ui'],
+  },
   css: {
     postcss: {
       plugins: [
@@ -64,6 +95,9 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+    watch: {
+      ignored: ['!**/node_modules/**', '!**/packages/**'],
+    },
   },
   build: {
     sourcemap: true,

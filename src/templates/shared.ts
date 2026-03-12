@@ -554,7 +554,7 @@ export async function createVueUiPackage(projectPath: string): Promise<void> {
   // src/index.ts
   await fs.writeFile(
     path.join(uiPath, 'src', 'index.ts'),
-    `export { MyButton } from './components/MyButton.vue';
+    `export { default as MyButton } from './components/MyButton.vue';
 
 `,
     'utf-8'

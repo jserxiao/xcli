@@ -305,6 +305,15 @@ import { MyButton } from 'ui';
 
 const date = ref<string>('');
 
+// 定义点击处理函数
+const handlePrimaryClick = () => {
+  alert('Primary clicked!');
+};
+
+const handleSecondaryClick = () => {
+  alert('Secondary clicked!');
+};
+
 onMounted(() => {
   // 使用 shared 包中的工具函数
   date.value = formatDate(new Date());
@@ -323,10 +332,10 @@ onMounted(() => {
     <p>当前日期: {{ date }}</p>
     <div class="button-demo">
       <p>UI 组件库示例:</p>
-      <MyButton variant="primary" @click="() => alert('Primary clicked!')">
+      <MyButton variant="primary" @click="handlePrimaryClick">
         Primary Button
       </MyButton>
-      <MyButton variant="secondary" @click="() => alert('Secondary clicked!')">
+      <MyButton variant="secondary" @click="handleSecondaryClick">
         Secondary Button
       </MyButton>
     </div>
@@ -362,6 +371,7 @@ ${getPageStyles(styleType)}
 import vue from '@vitejs/plugin-vue';
 import legacy from '@vitejs/plugin-legacy';
 import autoprefixer from 'autoprefixer';
+import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -371,6 +381,16 @@ export default defineConfig({
       targets: ['defaults', 'not IE 11'],
     }),
   ],
+  resolve: {
+    alias: {
+      shared: resolve(__dirname, 'packages/shared/src'),
+      ui: resolve(__dirname, 'packages/ui/src'),
+    },
+    dedupe: ['vue', 'vue-router'],
+  },
+  optimizeDeps: {
+    include: ['shared', 'ui'],
+  },
   css: {
     postcss: {
       plugins: [autoprefixer()],
@@ -379,6 +399,9 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+    watch: {
+      ignored: ['!**/node_modules/**', '!**/packages/**'],
+    },
   },
   build: {
     sourcemap: true,
