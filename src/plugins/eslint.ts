@@ -1,69 +1,82 @@
 import type { Plugin, PluginContext } from '../types/index.js';
 
 /**
- * 根据项目类型获取 ESLint 配置
+ * 根据项目类型获取 ESLint flat config
  */
 function getEslintConfig(context: PluginContext) {
   const { projectType } = context;
 
-  const baseConfig = {
-    env: {
-      es2022: true,
+  const baseConfig = `import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import prettierConfig from 'eslint-config-prettier';
+
+export default tseslint.config(
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  prettierConfig,
+  {
+    languageOptions: {
+      parserOptions: {
+        project: true,
+      },
     },
-    extends: [
-      'eslint:recommended',
-      'plugin:@typescript-eslint/recommended',
-    ],
-    parser: '@typescript-eslint/parser',
-    parserOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'module',
-    },
-    plugins: ['@typescript-eslint'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
-  };
+  },
+  {
+    ignores: ['dist/**', 'node_modules/**', '*.config.js', '*.config.ts'],
+  }`;
 
   if (projectType === 'react') {
-    return {
-      ...baseConfig,
-      env: {
-        ...baseConfig.env,
-        browser: true,
-      },
-      extends: [
-        ...baseConfig.extends,
-      ],
+    return baseConfig + `,
+  {
+    languageOptions: {
       parserOptions: {
-        ...baseConfig.parserOptions,
         ecmaFeatures: {
           jsx: true,
         },
       },
-    };
+      globals: {
+        console: 'readonly',
+        window: 'readonly',
+        document: 'readonly',
+      },
+    },
+  }
+);
+`;
   }
 
   if (projectType === 'vue') {
-    return {
-      ...baseConfig,
-      env: {
-        ...baseConfig.env,
-        browser: true,
+    return baseConfig + `,
+  {
+    languageOptions: {
+      globals: {
+        console: 'readonly',
+        window: 'readonly',
+        document: 'readonly',
       },
-    };
+    },
+  }
+);
+`;
   }
 
   // Library 模式
-  return {
-    ...baseConfig,
-    env: {
-      ...baseConfig.env,
-      node: true,
+  return baseConfig + `,
+  {
+    languageOptions: {
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+      },
     },
-  };
+  }
+);
+`;
 }
 
 export const eslintPlugin: Plugin = {
@@ -73,22 +86,19 @@ export const eslintPlugin: Plugin = {
   category: 'linter',
   defaultEnabled: true,
   devDependencies: {
-    eslint: '^8.56.0',
-    '@typescript-eslint/eslint-plugin': '^6.19.0',
-    '@typescript-eslint/parser': '^6.19.0',
+    eslint: '^9.18.0',
+    'typescript-eslint': '^8.20.0',
+    '@eslint/js': '^9.18.0',
+    'eslint-config-prettier': '^10.0.1',
   },
   scripts: {
-    lint: 'eslint src --ext .ts,.tsx,.vue',
-    'lint:fix': 'eslint src --ext .ts,.tsx,.vue --fix',
+    lint: 'eslint src',
+    'lint:fix': 'eslint src --fix',
   },
   files: [
     {
-      path: '.eslintrc.json',
-      content: (context: PluginContext) => JSON.stringify(getEslintConfig(context), null, 2),
-    },
-    {
-      path: '.eslintignore',
-      content: 'node_modules\ndist\n*.config.js\n',
+      path: 'eslint.config.js',
+      content: (context: PluginContext) => getEslintConfig(context),
     },
   ],
 };

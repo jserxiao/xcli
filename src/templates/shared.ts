@@ -307,6 +307,13 @@ export function getBaseTsConfig(framework: 'react' | 'vue'): Record<string, unkn
       resolveJsonModule: true,
       isolatedModules: true,
       noEmit: true,
+      // Monorepo workspace 包路径映射
+      paths: {
+        'shared': ['./packages/shared/src/index.ts'],
+        'ui': ['./packages/ui/src/index.ts'],
+      },
+      // 包含 workspace 包的 baseUrl
+      baseUrl: '.',
     },
     include: ['src/**/*'],
     exclude: ['node_modules', 'dist'],
@@ -355,12 +362,12 @@ export async function createSharedPackage(projectPath: string): Promise<void> {
       version: '1.0.0',
       private: true,
       type: 'module',
-      main: './dist/index.js',
-      types: './dist/index.d.ts',
+      main: './src/index.ts',
+      types: './src/index.ts',
       exports: {
         '.': {
-          types: './dist/index.d.ts',
-          import: './dist/index.js',
+          types: './src/index.ts',
+          import: './src/index.ts',
         },
       },
       scripts: {
@@ -417,12 +424,12 @@ export async function createReactUiPackage(projectPath: string): Promise<void> {
       version: '1.0.0',
       private: true,
       type: 'module',
-      main: './dist/index.js',
-      types: './dist/index.d.ts',
+      main: './src/index.ts',
+      types: './src/index.ts',
       exports: {
         '.': {
-          types: './dist/index.d.ts',
-          import: './dist/index.js',
+          types: './src/index.ts',
+          import: './src/index.ts',
         },
       },
       scripts: {
@@ -524,12 +531,12 @@ export async function createVueUiPackage(projectPath: string): Promise<void> {
       version: '1.0.0',
       private: true,
       type: 'module',
-      main: './dist/index.js',
-      types: './dist/index.d.ts',
+      main: './src/index.ts',
+      types: './src/index.ts',
       exports: {
         '.': {
-          types: './dist/index.d.ts',
-          import: './dist/index.js',
+          types: './src/index.ts',
+          import: './src/index.ts',
         },
       },
       scripts: {

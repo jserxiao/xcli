@@ -22,8 +22,14 @@ function getTsConfig(context: PluginContext) {
       resolveJsonModule: true,
       isolatedModules: true,
       noEmit: true,
+      // Monorepo workspace 包路径映射
+      paths: {
+        'shared': ['./packages/shared/src/index.ts'],
+        'ui': ['./packages/ui/src/index.ts'],
+      },
+      baseUrl: '.',
     },
-    include: ['src'],
+    include: ['src', 'packages/*/src'],
     exclude: ['node_modules'],
   };
 
