@@ -1,0 +1,370 @@
+import path from 'path';
+import fs from 'fs-extra';
+import inquirer, { DistinctQuestion } from 'inquirer';
+import ora from 'ora';
+import {
+  plugins,
+  pluginMap,
+  getPluginChoices,
+} from '../plugins/index.js';
+import type { ProjectConfig, CLIOptions, PluginContext, ProjectType, StyleType, StateManagerType } from '../types/index.js';
+import {
+  generatePackageJson,
+  installDependencies,
+  initGitRepo,
+  logger,
+  FileGenerator,
+} from '../utils/index.js';
+import {
+  getTemplateChoices,
+  getStyleChoices,
+  getStateManagerChoices,
+  createProjectStructure,
+  getProjectDependencies,
+  getProjectScripts,
+} from '../templates/index.js';
+
+/**
+ * 获取用户输入的项目配置
+ */
+async function getProjectConfig(
+  options: CLIOptions,
+  currentDir: string,
+  projectName?: string
+): Promise<ProjectConfig> {
+  // 如果使用了 --default 参数，使用默认配置
+  if (options.default) {
+    const projectType = (options.template as ProjectType) || 'library';
+    const styleType = (options.style as StyleType) || 'css';
+    const defaultPlugins = plugins.filter((p) => p.defaultEnabled).map((p) => p.name);
+
+    // React/Vue 项目自动添加 vite 插件
+    if ((projectType === 'react' || projectType === 'vue') && !defaultPlugins.includes('vite')) {
+      defaultPlugins.push('vite');
+    }
+
+    // 状态管理：命令行指定 > 默认值（Vue 用 pinia，React 用 none）
+    const stateManager: StateManagerType = (options.stateManager as StateManagerType) ||
+      (projectType === 'vue' ? 'pinia' : 'none');
+
+    return {
+      projectName: projectName || options.projectName || path.basename(currentDir),
+      projectType,
+      styleType,
+      stateManager,
+      useTypeScript: true,
+      plugins: defaultPlugins,
+      packageManager: options.packageManager || 'pnpm',
+      initGit: !options.skipGit,
+      installDeps: !options.skipInstall,
+    };
+  }
+
+  // 交互式询问
+  const questions: DistinctQuestion[] = [
+    {
+      type: 'input',
+      name: 'projectName',
+      message: '项目名称:',
+      default: options.projectName || path.basename(currentDir),
+      when: !options.projectName,
+    },
+    {
+      type: 'input',
+      name: 'description',
+      message: '项目描述:',
+      default: '',
+    },
+    {
+      type: 'input',
+      name: 'author',
+      message: '作者:',
+      default: '',
+    },
+    {
+      type: 'list',
+      name: 'projectType',
+      message: '选择项目类型:',
+      choices: getTemplateChoices(),
+      default: 'library',
+    },
+  ];
+
+  // 基础信息
+  const basicAnswers = await inquirer.prompt(questions);
+  const projectType = basicAnswers.projectType as ProjectType;
+
+  // 样式预处理器选择（仅 React/Vue 项目）
+  let styleType: StyleType = 'css';
+  if (projectType === 'react' || projectType === 'vue') {
+    const styleAnswer = await inquirer.prompt({
+      type: 'list',
+      name: 'styleType',
+      message: '选择样式预处理器:',
+      choices: getStyleChoices(),
+      default: options.style || 'css',
+    });
+    styleType = styleAnswer.styleType as StyleType;
+  }
+
+  // 状态管理选择（仅 React/Vue 项目）
+  let stateManager: StateManagerType = 'none';
+  if (projectType === 'react' || projectType === 'vue') {
+    const stateAnswer = await inquirer.prompt({
+      type: 'list',
+      name: 'stateManager',
+      message: '选择状态管理:',
+      choices: getStateManagerChoices(projectType),
+      default: projectType === 'vue' ? 'pinia' : 'none',
+    });
+    stateManager = stateAnswer.stateManager as StateManagerType;
+  }
+
+  // 包管理器选择
+  const packageManagerAnswer = await inquirer.prompt({
+    type: 'list',
+    name: 'packageManager',
+    message: '选择包管理器:',
+    choices: [
+      { name: 'pnpm', value: 'pnpm' },
+      { name: 'npm', value: 'npm' },
+      { name: 'yarn', value: 'yarn' },
+    ],
+    default: options.packageManager || 'pnpm',
+  });
+
+  // 插件选择（按类别分组）
+  const pluginQuestions: DistinctQuestion[] = [];
+  const pluginChoices = getPluginChoices();
+
+  for (const { name, plugins: categoryPlugins } of pluginChoices) {
+    if (categoryPlugins.length > 0) {
+      pluginQuestions.push({
+        type: 'checkbox',
+        name: `plugins_${name}`,
+        message: `选择 ${name} 插件:`,
+        choices: categoryPlugins,
+      });
+    }
+  }
+
+  const pluginAnswers = await inquirer.prompt(pluginQuestions);
+
+  // 合并所有选择的插件
+  const selectedPlugins = Object.values(pluginAnswers).flat() as string[];
+
+  // 其他配置
+  const otherQuestions: DistinctQuestion[] = [
+    {
+      type: 'confirm',
+      name: 'initGit',
+      message: '初始化 Git 仓库?',
+      default: true,
+      when: !options.skipGit,
+    },
+    {
+      type: 'confirm',
+      name: 'installDeps',
+      message: '立即安装依赖?',
+      default: true,
+      when: !options.skipInstall,
+    },
+  ];
+
+  const otherAnswers = await inquirer.prompt(otherQuestions);
+
+  return {
+    projectName: projectName || options.projectName || (basicAnswers.projectName as string),
+    description: basicAnswers.description as string,
+    author: basicAnswers.author as string,
+    projectType,
+    styleType,
+    stateManager,
+    useTypeScript: true,
+    plugins: selectedPlugins,
+    packageManager: packageManagerAnswer.packageManager as 'npm' | 'yarn' | 'pnpm',
+    initGit: otherAnswers.initGit as boolean,
+    installDeps: otherAnswers.installDeps as boolean,
+  };
+}
+
+/**
+ * 执行 init 命令
+ */
+export async function init(projectName: string | undefined, options: CLIOptions): Promise<void> {
+  const currentDir = process.cwd();
+  const projectPath = projectName
+    ? path.join(currentDir, projectName)
+    : currentDir;
+
+  logger.title('🚀 初始化项目');
+
+  // 获取项目配置
+  const config = await getProjectConfig(options, currentDir, projectName);
+
+  // 检查目录是否存在
+  if (projectName && (await fs.pathExists(projectPath))) {
+    const { overwrite } = await inquirer.prompt({
+      type: 'confirm',
+      name: 'overwrite',
+      message: `目录 ${projectName} 已存在，是否覆盖?`,
+      default: false,
+    });
+
+    if (!overwrite) {
+      logger.error('操作已取消');
+      process.exit(0);
+    }
+
+    await fs.emptyDir(projectPath);
+  }
+
+  // 创建项目目录
+  if (projectName) {
+    await fs.ensureDir(projectPath);
+  }
+
+  // 获取选中的插件
+  const selectedPlugins = config.plugins
+    .map((name) => pluginMap.get(name))
+    .filter((p): p is NonNullable<typeof p> => p !== undefined);
+
+  logger.info(`创建项目: ${config.projectName}`);
+  logger.info(`项目类型: ${config.projectType}`);
+  if (config.projectType === 'react' || config.projectType === 'vue') {
+    logger.info(`样式预处理器: ${config.styleType}`);
+    logger.info(`状态管理: ${config.stateManager === 'none' ? '无' : config.stateManager}`);
+  }
+  logger.info(`选择的插件: ${selectedPlugins.map((p) => p.displayName).join(', ') || '无'}`);
+
+  // 创建项目结构
+  const spinner = ora('创建项目结构...').start();
+  try {
+    const context: PluginContext = {
+      projectName: config.projectName,
+      projectPath,
+      projectType: config.projectType,
+      styleType: config.styleType,
+      stateManager: config.stateManager,
+      selectedPlugins: config.plugins,
+      useTypeScript: config.useTypeScript,
+      packageManager: config.packageManager,
+      options: {
+        description: config.description,
+        author: config.author,
+      },
+    };
+
+    await createProjectStructure(projectPath, config.projectType, context);
+    spinner.succeed('项目结构创建完成');
+  } catch (error) {
+    spinner.fail('创建项目结构失败');
+    throw error;
+  }
+
+  // 生成配置文件
+  const context: PluginContext = {
+    projectName: config.projectName,
+    projectPath,
+    projectType: config.projectType,
+    styleType: config.styleType,
+    stateManager: config.stateManager,
+    selectedPlugins: config.plugins,
+    useTypeScript: config.useTypeScript,
+    packageManager: config.packageManager,
+    options: {
+      description: config.description,
+      author: config.author,
+    },
+  };
+
+  // 生成插件文件
+  spinner.start('生成配置文件...');
+  try {
+    const generator = new FileGenerator(context);
+    await generator.generateFromPlugins(selectedPlugins);
+    spinner.succeed('配置文件生成完成');
+  } catch (error) {
+    spinner.fail('生成配置文件失败');
+    throw error;
+  }
+
+  // 生成 package.json
+  spinner.start('生成 package.json...');
+  try {
+    // 合并项目模板的依赖和脚本
+    const templateDeps = getProjectDependencies(config.projectType, config.styleType, config.stateManager);
+    const templateScripts = getProjectScripts(config.projectType);
+
+    await generatePackageJson(
+      projectPath,
+      config,
+      selectedPlugins,
+      templateDeps,
+      templateScripts
+    );
+    spinner.succeed('package.json 生成完成');
+  } catch (error) {
+    spinner.fail('生成 package.json 失败');
+    throw error;
+  }
+
+  // 执行插件安装后回调
+  for (const plugin of selectedPlugins) {
+    if (plugin.postInstall) {
+      spinner.start(`执行 ${plugin.displayName} 安装后操作...`);
+      try {
+        await plugin.postInstall(context);
+        spinner.succeed(`${plugin.displayName} 安装后操作完成`);
+      } catch (error) {
+        spinner.fail(`${plugin.displayName} 安装后操作失败`);
+        throw error;
+      }
+    }
+  }
+
+  // 安装依赖
+  if (config.installDeps) {
+    spinner.start('安装依赖...');
+    try {
+      await installDependencies(projectPath, config.packageManager);
+      spinner.succeed('依赖安装完成');
+    } catch (error) {
+      spinner.fail('依赖安装失败');
+      throw error;
+    }
+  }
+
+  // 初始化 Git
+  if (config.initGit) {
+    spinner.start('初始化 Git 仓库...');
+    try {
+      await initGitRepo(projectPath);
+      spinner.succeed('Git 仓库初始化完成');
+    } catch (error) {
+      spinner.fail('Git 仓库初始化失败');
+      // Git 初始化失败不中断流程
+      logger.warning('请确保已安装 Git');
+    }
+  }
+
+  // 完成
+  logger.newline();
+  logger.success('🎉 项目初始化完成!');
+  logger.newline();
+
+  if (projectName) {
+    console.log(`  cd ${projectName}`);
+  }
+  if (!config.installDeps) {
+    console.log(`  ${config.packageManager} install`);
+  }
+
+  // 根据项目类型显示不同的启动命令
+  if (config.projectType === 'react' || config.projectType === 'vue') {
+    console.log(`  ${config.packageManager} run dev`);
+  } else {
+    console.log(`  ${config.packageManager} run build`);
+  }
+  logger.newline();
+}

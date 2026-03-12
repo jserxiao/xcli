@@ -1,0 +1,30 @@
+# Source files
+src/
+*.ts
+!*.d.ts
+
+# Config files
+tsconfig.json
+rollup.config.mjs
+.eslintrc.json
+.prettierrc
+
+# Development
+node_modules/
+test/
+docs/
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Misc
+*.log
+.DS_Store
+Thumbs.db
+todo.md
+README.md
