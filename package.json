@@ -1,6 +1,6 @@
 {
   "name": "@jserxiao/xcli",
-  "version": "1.0.3",
+  "version": "1.0.7",
   "description": "A pluggable CLI tool for scaffolding TypeScript projects",
   "type": "module",
   "main": "dist/index.js",
@@ -13,7 +13,8 @@
     "start": "node dist/index.js",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "pub": "bash publish.sh"
   },
   "keywords": [
     "cli",
