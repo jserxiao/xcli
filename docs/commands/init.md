@@ -23,6 +23,7 @@ xcli i [projectName] [options]
 | `--template <name>` | `-t` | `library` | 项目类型 |
 | `--style <type>` | `-s` | `less` | 样式预处理器 |
 | `--state-manager <type>` | `-m` | - | 状态管理方案 |
+| `--http-client <type>` | `-h` | `axios` | HTTP 请求库 |
 | `--package-manager <name>` | `-p` | `pnpm` | 包管理器 |
 | `--skip-install` | `-si` | `false` | 跳过依赖安装 |
 | `--skip-git` | `-sg` | `false` | 跳过 Git 初始化 |
@@ -176,6 +177,42 @@ xcli i my-app -t vue -s less -d
 |------|------|
 | `pinia` | Pinia - Vue 官方状态管理（默认） |
 | `none` | 不使用状态管理 |
+
+## HTTP 请求库
+
+React/Vue 项目可选择 HTTP 请求库：
+
+| 选项 | 说明 |
+|------|------|
+| `axios` | 功能丰富的 HTTP 客户端，支持拦截器、取消请求等（默认） |
+| `fetch` | 原生 API 封装，轻量无依赖 |
+| `none` | 不使用 HTTP 请求库 |
+
+**Axios 特性**：
+- 请求/响应拦截器
+- 自动转换 JSON
+- 取消请求支持
+- 客户端防护（XSRF）
+- 统一错误处理
+- 封装文件位于 `src/api/request.ts`
+
+**Fetch 特性**：
+- 原生浏览器 API，无额外依赖
+- 超时控制
+- 统一请求接口封装
+- 轻量级方案
+- 封装文件位于 `src/api/request.ts`
+
+```bash
+# 使用 Axios（默认）
+xcli i my-app -t react -d
+
+# 使用 Fetch
+xcli i my-app -t react --http-client fetch -d
+
+# 不使用 HTTP 请求库
+xcli i my-app -t react -h none -d
+```
 
 ## 样式预处理器
 

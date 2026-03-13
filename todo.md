@@ -53,7 +53,7 @@
 | 功能 | 说明 | 优先级 | 状态 |
 |------|------|--------|------|
 | **UI 组件库选项** | Ant Design / Element Plus / TailwindCSS | ⭐⭐⭐ | 待开发 |
-| **HTTP 请求库选项** | Axios / Fetch 封装 | ⭐⭐ | 待开发 |
+| **HTTP 请求库选项** | Axios / Fetch 封装 | ⭐⭐ | ✅ 已完成 |
 | **环境变量配置** | .env 文件模板 | ⭐⭐ | 待开发 |
 | **Docker 支持** | 生成 Dockerfile 和 docker-compose | ⭐⭐ | 待开发 |
 | **CI/CD 模板** | GitHub Actions / GitLab CI | ⭐⭐ | 待开发 |

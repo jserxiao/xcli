@@ -50,6 +50,8 @@ export interface PluginContext {
   styleType: StyleType;
   /** 状态管理 */
   stateManager: StateManagerType;
+  /** HTTP 请求库 */
+  httpClient: HttpClientType;
   /** 用户选择的插件列表 */
   selectedPlugins: string[];
   /** 是否使用 TypeScript */
@@ -76,6 +78,11 @@ export type StyleType = 'css' | 'less' | 'scss';
 export type StateManagerType = 'none' | 'redux' | 'mobx' | 'pinia';
 
 /**
+ * HTTP 请求库类型
+ */
+export type HttpClientType = 'axios' | 'fetch' | 'none';
+
+/**
  * 项目配置
  */
 export interface ProjectConfig {
@@ -91,6 +98,8 @@ export interface ProjectConfig {
   styleType: StyleType;
   /** 状态管理 */
   stateManager: StateManagerType;
+  /** HTTP 请求库 */
+  httpClient: HttpClientType;
   /** 是否使用 TypeScript */
   useTypeScript: boolean;
   /** 选择的插件 */
@@ -115,6 +124,8 @@ export interface CLIOptions {
   style?: 'css' | 'less' | 'scss';
   /** 状态管理 */
   stateManager?: 'none' | 'redux' | 'mobx' | 'pinia';
+  /** HTTP 请求库 */
+  httpClient?: 'axios' | 'fetch' | 'none';
   /** 跳过安装依赖 */
   skipInstall?: boolean;
   /** 跳过 Git 初始化 */

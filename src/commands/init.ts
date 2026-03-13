@@ -7,7 +7,7 @@ import {
   pluginMap,
   getPluginChoices,
 } from '../plugins/index.js';
-import type { ProjectConfig, CLIOptions, PluginContext, ProjectType, StyleType, StateManagerType } from '../types/index.js';
+import type { ProjectConfig, CLIOptions, PluginContext, ProjectType, StyleType, StateManagerType, HttpClientType } from '../types/index.js';
 import {
   generatePackageJson,
   installDependencies,
@@ -23,6 +23,7 @@ import {
   getProjectDependencies,
   getProjectScripts,
 } from '../templates/index.js';
+import { getHttpClientChoices } from '../plugins/http-client.js';
 
 /**
  * 获取用户输入的项目配置
@@ -47,11 +48,15 @@ async function getProjectConfig(
     const stateManager: StateManagerType = (options.stateManager as StateManagerType) ||
       (projectType === 'vue' ? 'pinia' : 'redux');
 
+    // HTTP 请求库：命令行指定 > 默认值（axios）
+    const httpClient: HttpClientType = (options.httpClient as HttpClientType) || 'axios';
+
     return {
       projectName: projectName || options.projectName || path.basename(currentDir),
       projectType,
       styleType,
       stateManager,
+      httpClient,
       useTypeScript: true,
       plugins: defaultPlugins,
       packageManager: options.packageManager || 'pnpm',
@@ -120,6 +125,19 @@ async function getProjectConfig(
     stateManager = stateAnswer.stateManager as StateManagerType;
   }
 
+  // HTTP 请求库选择（仅 React/Vue 项目）
+  let httpClient: HttpClientType = 'axios';
+  if (projectType === 'react' || projectType === 'vue') {
+    const httpAnswer = await inquirer.prompt({
+      type: 'list',
+      name: 'httpClient',
+      message: '选择 HTTP 请求库:',
+      choices: getHttpClientChoices(),
+      default: options.httpClient || 'axios',
+    });
+    httpClient = httpAnswer.httpClient as HttpClientType;
+  }
+
   // 包管理器选择
   const packageManagerAnswer = await inquirer.prompt({
     type: 'list',
@@ -180,6 +198,7 @@ async function getProjectConfig(
     projectType,
     styleType,
     stateManager,
+    httpClient,
     useTypeScript: true,
     plugins: selectedPlugins,
     packageManager: packageManagerAnswer.packageManager as 'npm' | 'yarn' | 'pnpm',
@@ -234,6 +253,7 @@ export async function init(projectName: string | undefined, options: CLIOptions)
   if (config.projectType === 'react' || config.projectType === 'vue') {
     logger.info(`样式预处理器: ${config.styleType}`);
     logger.info(`状态管理: ${config.stateManager === 'none' ? '无' : config.stateManager}`);
+    logger.info(`HTTP 请求库: ${config.httpClient === 'none' ? '无' : config.httpClient}`);
   }
   logger.info(`选择的插件: ${selectedPlugins.map((p) => p.displayName).join(', ') || '无'}`);
 
@@ -246,6 +266,7 @@ export async function init(projectName: string | undefined, options: CLIOptions)
       projectType: config.projectType,
       styleType: config.styleType,
       stateManager: config.stateManager,
+      httpClient: config.httpClient,
       selectedPlugins: config.plugins,
       useTypeScript: config.useTypeScript,
       packageManager: config.packageManager,
@@ -269,6 +290,7 @@ export async function init(projectName: string | undefined, options: CLIOptions)
     projectType: config.projectType,
     styleType: config.styleType,
     stateManager: config.stateManager,
+    httpClient: config.httpClient,
     selectedPlugins: config.plugins,
     useTypeScript: config.useTypeScript,
     packageManager: config.packageManager,
@@ -293,7 +315,7 @@ export async function init(projectName: string | undefined, options: CLIOptions)
   spinner.start('生成 package.json...');
   try {
     // 合并项目模板的依赖和脚本
-    const templateDeps = getProjectDependencies(config.projectType, config.styleType, config.stateManager);
+    const templateDeps = getProjectDependencies(config.projectType, config.styleType, config.stateManager, config.httpClient);
     const templateScripts = getProjectScripts(config.projectType);
 
     await generatePackageJson(

@@ -1,4 +1,4 @@
-import type { ProjectType, PluginContext, StyleType, StateManagerType } from '../types/index.js';
+import type { ProjectType, PluginContext, StyleType, StateManagerType, HttpClientType } from '../types/index.js';
 import { createBaseFiles } from '../utils/fileGenerator.js';
 import { libraryTemplate } from './library.js';
 import { reactTemplate } from './react.js';
@@ -84,6 +84,7 @@ export async function createProjectStructure(
   await createBaseFiles(projectPath, context.projectName, projectType, {
     styleType: context.styleType,
     stateManager: context.stateManager,
+    httpClient: context.httpClient,
   });
 }
 
@@ -93,7 +94,8 @@ export async function createProjectStructure(
 export function getProjectDependencies(
   projectType: ProjectType,
   styleType: StyleType = 'less',
-  stateManager: StateManagerType = 'none'
+  stateManager: StateManagerType = 'none',
+  httpClient: HttpClientType = 'axios'
 ) {
   const template = getTemplate(projectType);
   if (!template) {
@@ -102,10 +104,10 @@ export function getProjectDependencies(
 
   // 如果模板支持样式和状态管理参数
   if (projectType === 'react') {
-    return reactTemplate.getDependencies(styleType, stateManager);
+    return reactTemplate.getDependencies(styleType, stateManager, httpClient);
   }
   if (projectType === 'vue') {
-    return vueTemplate.getDependencies(styleType, stateManager);
+    return vueTemplate.getDependencies(styleType, stateManager, httpClient);
   }
 
   return template.getDependencies();

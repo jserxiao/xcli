@@ -1,4 +1,4 @@
-import type { ProjectType, PluginContext } from '../types/index.js';
+import type { ProjectType, PluginContext, StyleType, StateManagerType, HttpClientType } from '../types/index.js';
 import path from 'path';
 import fs from 'fs-extra';
 
@@ -10,7 +10,11 @@ export interface TemplateGenerator {
   displayName: string;
   description: string;
   createStructure: (projectPath: string, context: PluginContext) => Promise<void>;
-  getDependencies: () => { dependencies: Record<string, string>; devDependencies: Record<string, string> };
+  getDependencies: (
+    styleType?: StyleType,
+    stateManager?: StateManagerType,
+    httpClient?: HttpClientType
+  ) => { dependencies: Record<string, string>; devDependencies: Record<string, string> };
   getScripts: () => Record<string, string>;
 }
 

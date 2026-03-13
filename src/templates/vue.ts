@@ -1,4 +1,4 @@
-import type { ProjectType, PluginContext, StyleType, StateManagerType } from '../types/index.js';
+import type { ProjectType, PluginContext, StyleType, StateManagerType, HttpClientType } from '../types/index.js';
 import path from 'path';
 import fs from 'fs-extra';
 import {
@@ -12,6 +12,7 @@ import {
   createVueUiPackage,
   getViteEnvDts,
 } from './shared.js';
+import { axiosPlugin, fetchPlugin } from '../plugins/http-client.js';
 
 /**
  * 创建 Pinia store 文件
@@ -78,7 +79,7 @@ export const vueTemplate = {
   description: 'Vue 3 + Vite 前端项目 (pnpm monorepo)',
 
   createStructure: async (projectPath: string, context: PluginContext) => {
-    const { styleType = 'css', stateManager = 'pinia' } = context;
+    const { styleType = 'css', stateManager = 'pinia', httpClient = 'axios' } = context;
     const styleExt = getStyleExt(styleType);
     const styleLang = styleType === 'css' ? '' : ` lang="${styleExt}"`;
 
@@ -128,6 +129,25 @@ export const vueTemplate = {
     // 创建 Pinia store 文件
     if (stateManager === 'pinia') {
       await createPiniaStore(projectPath);
+    }
+
+    // 创建 HTTP 请求相关文件
+    if (httpClient === 'axios') {
+      await fs.ensureDir(path.join(projectPath, 'src', 'api'));
+      const content = axiosPlugin.files![0].content;
+      await fs.writeFile(
+        path.join(projectPath, 'src', 'api', 'request.ts'),
+        typeof content === 'function' ? content(context) : content,
+        'utf-8'
+      );
+    } else if (httpClient === 'fetch') {
+      await fs.ensureDir(path.join(projectPath, 'src', 'api'));
+      const content = fetchPlugin.files![0].content;
+      await fs.writeFile(
+        path.join(projectPath, 'src', 'api', 'request.ts'),
+        typeof content === 'function' ? content(context) : content,
+        'utf-8'
+      );
     }
 
     // index.html
@@ -305,15 +325,6 @@ import { MyButton } from 'ui';
 
 const date = ref<string>('');
 
-// 定义点击处理函数
-const handlePrimaryClick = () => {
-  alert('Primary clicked!');
-};
-
-const handleSecondaryClick = () => {
-  alert('Secondary clicked!');
-};
-
 onMounted(() => {
   // 使用 shared 包中的工具函数
   date.value = formatDate(new Date());
@@ -332,10 +343,10 @@ onMounted(() => {
     <p>当前日期: {{ date }}</p>
     <div class="button-demo">
       <p>UI 组件库示例:</p>
-      <MyButton variant="primary" @click="handlePrimaryClick">
+      <MyButton variant="primary" @click="() => alert('Primary clicked!')">
         Primary Button
       </MyButton>
-      <MyButton variant="secondary" @click="handleSecondaryClick">
+      <MyButton variant="secondary" @click="() => alert('Secondary clicked!')">
         Secondary Button
       </MyButton>
     </div>
@@ -371,7 +382,6 @@ ${getPageStyles(styleType)}
 import vue from '@vitejs/plugin-vue';
 import legacy from '@vitejs/plugin-legacy';
 import autoprefixer from 'autoprefixer';
-import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -381,16 +391,6 @@ export default defineConfig({
       targets: ['defaults', 'not IE 11'],
     }),
   ],
-  resolve: {
-    alias: {
-      shared: resolve(__dirname, 'packages/shared/src'),
-      ui: resolve(__dirname, 'packages/ui/src'),
-    },
-    dedupe: ['vue', 'vue-router'],
-  },
-  optimizeDeps: {
-    include: ['shared', 'ui'],
-  },
   css: {
     postcss: {
       plugins: [autoprefixer()],
@@ -399,9 +399,6 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
-    watch: {
-      ignored: ['!**/node_modules/**', '!**/packages/**'],
-    },
   },
   build: {
     sourcemap: true,
@@ -421,7 +418,7 @@ export default defineConfig({
     await createVueUiPackage(projectPath);
   },
 
-  getDependencies: (styleType: StyleType = 'css', stateManager: StateManagerType = 'pinia') => {
+  getDependencies: (styleType: StyleType = 'css', stateManager: StateManagerType = 'pinia', httpClient: HttpClientType = 'axios') => {
     const deps: {
       dependencies: Record<string, string>;
       devDependencies: Record<string, string>;
@@ -447,6 +444,11 @@ export default defineConfig({
     // Pinia 状态管理
     if (stateManager === 'pinia') {
       deps.dependencies['pinia'] = '^2.1.7';
+    }
+
+    // HTTP 请求库依赖
+    if (httpClient === 'axios') {
+      deps.dependencies['axios'] = '^1.6.0';
     }
 
     if (styleType === 'less') {

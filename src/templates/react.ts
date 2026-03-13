@@ -1,4 +1,4 @@
-import type { ProjectType, PluginContext, StyleType, StateManagerType } from '../types/index.js';
+import type { ProjectType, PluginContext, StyleType, StateManagerType, HttpClientType } from '../types/index.js';
 import path from 'path';
 import fs from 'fs-extra';
 import {
@@ -12,6 +12,7 @@ import {
   createReactUiPackage,
   getViteEnvDts,
 } from './shared.js';
+import { axiosPlugin, fetchPlugin } from '../plugins/http-client.js';
 
 /**
  * 创建 Redux store 文件
@@ -268,7 +269,7 @@ export const reactTemplate = {
   description: 'React + Vite 前端项目 (pnpm monorepo)',
 
   createStructure: async (projectPath: string, context: PluginContext) => {
-    const { styleType = 'css', stateManager = 'none' } = context;
+    const { styleType = 'css', stateManager = 'none', httpClient = 'axios' } = context;
     const styleExt = getStyleExt(styleType);
 
     // ============ 根目录文件 ============
@@ -318,6 +319,25 @@ export const reactTemplate = {
       await createReduxStore(projectPath);
     } else if (stateManager === 'mobx') {
       await createMobXStore(projectPath);
+    }
+
+    // 创建 HTTP 请求相关文件
+    if (httpClient === 'axios') {
+      await fs.ensureDir(path.join(projectPath, 'src', 'api'));
+      const content = axiosPlugin.files![0].content;
+      await fs.writeFile(
+        path.join(projectPath, 'src', 'api', 'request.ts'),
+        typeof content === 'function' ? content(context) : content,
+        'utf-8'
+      );
+    } else if (httpClient === 'fetch') {
+      await fs.ensureDir(path.join(projectPath, 'src', 'api'));
+      const content = fetchPlugin.files![0].content;
+      await fs.writeFile(
+        path.join(projectPath, 'src', 'api', 'request.ts'),
+        typeof content === 'function' ? content(context) : content,
+        'utf-8'
+      );
     }
 
     // index.html
@@ -640,7 +660,7 @@ export default defineConfig({
     await createReactUiPackage(projectPath);
   },
 
-  getDependencies: (styleType: StyleType = 'css', stateManager: StateManagerType = 'none') => {
+  getDependencies: (styleType: StyleType = 'css', stateManager: StateManagerType = 'none', httpClient: HttpClientType = 'axios') => {
     const deps: {
       dependencies: Record<string, string>;
       devDependencies: Record<string, string>;
@@ -672,6 +692,11 @@ export default defineConfig({
     } else if (stateManager === 'mobx') {
       deps.dependencies['mobx'] = '^6.12.0';
       deps.dependencies['mobx-react-lite'] = '^4.0.5';
+    }
+
+    // HTTP 请求库依赖
+    if (httpClient === 'axios') {
+      deps.dependencies['axios'] = '^1.6.0';
     }
 
     if (styleType === 'less') {

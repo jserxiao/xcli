@@ -20,6 +20,7 @@ program
   .option('-t, --template <name>', '项目类型 (library/react/vue)')
   .option('-s, --style <type>', '样式预处理器 (css/less/scss)')
   .option('-m, --state-manager <type>', '状态管理 (none/redux/mobx/pinia)')
+  .option('-h, --http-client <type>', 'HTTP 请求库 (axios/fetch/none)')
   .option('-p, --package-manager <manager>', '包管理器 (npm/yarn/pnpm)', 'pnpm')
   .option('-si, --skip-install', '跳过依赖安装')
   .option('-sg, --skip-git', '跳过 Git 初始化')

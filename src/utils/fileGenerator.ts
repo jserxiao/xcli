@@ -61,7 +61,7 @@ export async function createBaseFiles(
   projectPath: string,
   projectName: string,
   projectType: string,
-  context?: { styleType?: string; stateManager?: string }
+  context?: { styleType?: string; stateManager?: string; httpClient?: string }
 ): Promise<void> {
   // 使用共享的 gitignore 内容（但保留 library 项目的简化版）
   const isLibrary = projectType === 'library';
@@ -118,6 +118,8 @@ coverage/
     const styleExt = context?.styleType === 'scss' ? 'scss' : context?.styleType === 'less' ? 'less' : 'css';
     const stateManagerName = context?.stateManager === 'redux' ? 'Redux Toolkit' : 
                              context?.stateManager === 'mobx' ? 'MobX' : null;
+    const httpClientName = context?.httpClient === 'axios' ? 'Axios' : 
+                           context?.httpClient === 'fetch' ? 'Fetch' : null;
     
     readmeContent += `一个基于 React 18 + TypeScript + Vite 构建的现代化前端项目。
 
@@ -131,14 +133,15 @@ coverage/
 | 路由 | React Router 6 |
 | 样式 | ${styleExt.toUpperCase()}${styleExt !== 'css' ? ' (CSS 预处理器)' : ''} |
 | 代码规范 | ESLint 9 + Prettier |
-| 包管理 | pnpm (Monorepo) |
-${stateManagerName ? `| 状态管理 | ${stateManagerName} |` : ''}
+| 包管理 | pnpm (Monorepo) |${stateManagerName ? `\n| 状态管理 | ${stateManagerName} |` : ''}${httpClientName ? `\n| HTTP 请求 | ${httpClientName} |` : ''}
 
 ## 目录结构
 
 \`\`\`
 ${projectName}/
 ├── src/                    # 主应用源码
+│   ├── api/                # API 请求${httpClientName ? `
+│   │   └── request.ts      # HTTP 请求封装` : ''}
 │   ├── components/         # 通用组件
 │   │   └── Layout/         # 布局组件
 │   ├── pages/              # 页面组件
@@ -170,7 +173,30 @@ ${projectName}/
 ├── eslint.config.js        # ESLint 配置 (Flat Config)
 ├── pnpm-workspace.yaml     # pnpm 工作区配置
 └── package.json
-\`\`\`${context?.stateManager === 'redux' ? `
+\`\`\`${context?.httpClient && context.httpClient !== 'none' ? `
+
+## HTTP 请求
+
+项目封装了 HTTP 请求，位于 \`src/api/request.ts\`。
+
+### 使用示例
+
+\`\`\`typescript
+import { http } from './api/request';
+
+// GET 请求
+const data = await http.get<UserInfo>('/user/info');
+
+// POST 请求
+const result = await http.post<Response>('/user/login', { username, password });
+
+// PUT 请求
+await http.put('/user/profile', { name: 'John' });
+
+// DELETE 请求
+await http.delete('/user/123');
+\`\`\`
+` : ''}${context?.stateManager === 'redux' ? `
 
 ## Redux Toolkit 使用
 
@@ -289,6 +315,8 @@ import { Button } from 'ui';
   } else if (projectType === 'vue') {
     const styleExt = context?.styleType === 'scss' ? 'scss' : context?.styleType === 'less' ? 'less' : 'css';
     const hasPinia = context?.stateManager !== 'none';
+    const httpClientName = context?.httpClient === 'axios' ? 'Axios' : 
+                           context?.httpClient === 'fetch' ? 'Fetch' : null;
     
     readmeContent += `一个基于 Vue 3 + TypeScript + Vite 构建的现代化前端项目。
 
@@ -302,14 +330,15 @@ import { Button } from 'ui';
 | 路由 | Vue Router 4 |
 | 样式 | ${styleExt.toUpperCase()}${styleExt !== 'css' ? ' (CSS 预处理器)' : ''} |
 | 代码规范 | ESLint 9 + Prettier |
-| 包管理 | pnpm (Monorepo) |
-${hasPinia ? `| 状态管理 | Pinia |` : ''}
+| 包管理 | pnpm (Monorepo) |${hasPinia ? `\n| 状态管理 | Pinia |` : ''}${httpClientName ? `\n| HTTP 请求 | ${httpClientName} |` : ''}
 
 ## 目录结构
 
 \`\`\`
 ${projectName}/
 ├── src/                    # 主应用源码
+│   ├── api/                # API 请求${httpClientName ? `
+│   │   └── request.ts      # HTTP 请求封装` : ''}
 │   ├── components/         # 通用组件
 │   │   └── Layout/         # 布局组件
 │   ├── pages/              # 页面组件
@@ -339,7 +368,30 @@ ${projectName}/
 ├── eslint.config.js        # ESLint 配置 (Flat Config)
 ├── pnpm-workspace.yaml     # pnpm 工作区配置
 └── package.json
+\`\`\`${context?.httpClient && context.httpClient !== 'none' ? `
+
+## HTTP 请求
+
+项目封装了 HTTP 请求，位于 \`src/api/request.ts\`。
+
+### 使用示例
+
+\`\`\`typescript
+import { http } from './api/request';
+
+// GET 请求
+const data = await http.get<UserInfo>('/user/info');
+
+// POST 请求
+const result = await http.post<Response>('/user/login', { username, password });
+
+// PUT 请求
+await http.put('/user/profile', { name: 'John' });
+
+// DELETE 请求
+await http.delete('/user/123');
 \`\`\`
+` : ''}
 
 ## 快速开始
 

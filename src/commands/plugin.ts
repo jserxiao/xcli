@@ -55,6 +55,7 @@ export async function addPlugin(pluginNames: string[]): Promise<void> {
     projectType: 'library', // 插件管理默认使用 library 类型
     styleType: 'css', // 插件管理默认使用 css
     stateManager: 'none', // 插件管理默认不使用状态管理
+    httpClient: 'none', // 插件管理默认不使用 HTTP 请求库
     selectedPlugins: selectedPlugins,
     useTypeScript: true,
     packageManager: 'npm',
