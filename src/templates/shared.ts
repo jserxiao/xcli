@@ -720,3 +720,207 @@ export async function createSrcDirectories(projectPath: string): Promise<void> {
   await fs.ensureDir(path.join(projectPath, 'src', 'router'));
   await fs.ensureDir(path.join(projectPath, 'src', 'assets'));
 }
+
+// ============ VSCode 配置 ============
+
+/**
+ * VSCode 配置上下文
+ */
+export interface VscodeConfigContext {
+  projectType: 'library' | 'react' | 'vue';
+  styleType: StyleType;
+  hasStylelint: boolean;
+  hasPrettier: boolean;
+  hasEslint: boolean;
+}
+
+/**
+ * 获取 VSCode settings.json 内容
+ */
+export function getVscodeSettings(context: VscodeConfigContext): string {
+  const { projectType, styleType, hasStylelint, hasPrettier, hasEslint } = context;
+
+  const settings: Record<string, any> = {
+    // 编辑器基础设置
+    'editor.formatOnSave': true,
+    'editor.defaultFormatter': hasPrettier ? 'esbenp.prettier-vscode' : undefined,
+    'editor.codeActionsOnSave': {},
+    'editor.tabSize': 2,
+    'editor.insertSpaces': true,
+    'editor.detectIndentation': true,
+    'editor.renderWhitespace': 'boundary',
+    'editor.minimap.enabled': false,
+    'files.eol': '\n',
+    'files.insertFinalNewline': true,
+    'files.trimTrailingWhitespace': true,
+    // TypeScript 设置
+    'typescript.tsdk': 'node_modules/typescript/lib',
+    'typescript.enablePromptUseWorkspaceTsdk': true,
+    'typescript.preferences.importModuleSpecifier': 'relative',
+  };
+
+  // ESLint 配置
+  if (hasEslint) {
+    settings['editor.codeActionsOnSave'] = {
+      'source.fixAll.eslint': 'explicit',
+    };
+    settings['eslint.validate'] = [
+      'javascript',
+      'javascriptreact',
+      'typescript',
+      'typescriptreact',
+    ];
+  }
+
+  // Prettier 配置
+  if (hasPrettier) {
+    settings['prettier.requireConfig'] = true;
+    settings['prettier.useEditorConfig'] = true;
+  }
+
+  // Stylelint 配置
+  if (hasStylelint) {
+    settings['stylelint.validate'] = ['css', 'less', 'scss'];
+    settings['css.validate'] = false;
+    settings['less.validate'] = false;
+    settings['scss.validate'] = false;
+  }
+
+  // 样式相关
+  if (styleType === 'less') {
+    settings['less.lint.unknownAtRules'] = 'ignore';
+  } else if (styleType === 'scss') {
+    settings['scss.lint.unknownAtRules'] = 'ignore';
+  }
+
+  // 项目类型特定配置
+  if (projectType === 'react') {
+    settings['emmet.includeLanguages'] = {
+      javascript: 'javascriptreact',
+    };
+  } else if (projectType === 'vue') {
+    settings['vue.server.hybridMode'] = true;
+    settings['vue.inlayHints.missingProps'] = true;
+    settings['vue.inlayHints.inlineHandlerLeading'] = true;
+  }
+
+  // 过滤掉 undefined 值
+  const filteredSettings: Record<string, any> = {};
+  for (const [key, value] of Object.entries(settings)) {
+    if (value !== undefined) {
+      filteredSettings[key] = value;
+    }
+  }
+
+  return JSON.stringify(filteredSettings, null, 2);
+}
+
+/**
+ * 获取 VSCode extensions.json 内容
+ */
+export function getVscodeExtensions(context: VscodeConfigContext): string {
+  const { projectType, hasStylelint, hasPrettier, hasEslint } = context;
+
+  const extensions: string[] = [
+    // 必装扩展
+    'dbaeumer.vscode-eslint', // ESLint
+    'esbenp.prettier-vscode', // Prettier
+    'editorconfig.editorconfig', // EditorConfig
+    'usernamehw.errorlens', // Error Lens
+    'streetsidesoftware.code-spell-checker', // Code Spell Checker
+  ];
+
+  // TypeScript 相关
+  extensions.push('ms-vscode.vscode-typescript-next');
+
+  // 项目类型扩展
+  if (projectType === 'react') {
+    extensions.push('dsznajder.es7-react-js-snippets');
+  } else if (projectType === 'vue') {
+    extensions.push('Vue.volar');
+    extensions.push('hollowtree.vue-snippets');
+  }
+
+  // Stylelint 扩展
+  if (hasStylelint) {
+    extensions.push('stylelint.vscode-stylelint');
+  }
+
+  // 其他推荐扩展
+  extensions.push('christian-kohler.path-intellisense');
+  extensions.push('christian-kohler.npm-intellisense');
+
+  const recommendations = {
+    recommendations: [...new Set(extensions)], // 去重
+  };
+
+  return JSON.stringify(recommendations, null, 2);
+}
+
+/**
+ * 获取 VSCode launch.json 内容
+ */
+export function getVscodeLaunch(projectType: 'library' | 'react' | 'vue'): string {
+  if (projectType === 'library') {
+    return JSON.stringify({
+      version: '0.2.0',
+      configurations: [
+        {
+          type: 'node',
+          request: 'launch',
+          name: 'Debug Current File',
+          skipFiles: ['<node_internals>/**'],
+          program: '${file}',
+          preLaunchTask: 'tsc: build - tsconfig.json',
+          outFiles: ['${workspaceFolder}/dist/**/*.js'],
+        },
+      ],
+    }, null, 2);
+  }
+
+  // React/Vue 项目
+  return JSON.stringify({
+    version: '0.2.0',
+    configurations: [
+      {
+        type: 'chrome',
+        request: 'launch',
+        name: 'Launch Chrome',
+        url: 'http://localhost:5173',
+        webRoot: '${workspaceFolder}/src',
+      },
+    ],
+  }, null, 2);
+}
+
+/**
+ * 创建 .vscode 目录和配置文件
+ */
+export async function createVscodeConfig(
+  projectPath: string,
+  context: VscodeConfigContext
+): Promise<void> {
+  const vscodePath = path.join(projectPath, '.vscode');
+  await fs.ensureDir(vscodePath);
+
+  // settings.json
+  await fs.writeFile(
+    path.join(vscodePath, 'settings.json'),
+    getVscodeSettings(context),
+    'utf-8'
+  );
+
+  // extensions.json
+  await fs.writeFile(
+    path.join(vscodePath, 'extensions.json'),
+    getVscodeExtensions(context),
+    'utf-8'
+  );
+
+  // launch.json
+  await fs.writeFile(
+    path.join(vscodePath, 'launch.json'),
+    getVscodeLaunch(context.projectType),
+    'utf-8'
+  );
+}

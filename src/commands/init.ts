@@ -24,6 +24,7 @@ import {
   getProjectScripts,
 } from '../templates/index.js';
 import { getHttpClientChoices } from '../plugins/http-client.js';
+import { createVscodeConfig } from '../templates/shared.js';
 
 /**
  * 获取用户输入的项目配置
@@ -62,6 +63,7 @@ async function getProjectConfig(
       packageManager: options.packageManager || 'pnpm',
       initGit: !options.skipGit,
       installDeps: !options.skipInstall,
+      createVscodeConfig: true, // 默认创建 VSCode 配置
     };
   }
 
@@ -187,6 +189,12 @@ async function getProjectConfig(
       default: true,
       when: !options.skipInstall,
     },
+    {
+      type: 'confirm',
+      name: 'createVscodeConfig',
+      message: '创建 VSCode 配置?',
+      default: true,
+    },
   ];
 
   const otherAnswers = await inquirer.prompt(otherQuestions);
@@ -204,6 +212,7 @@ async function getProjectConfig(
     packageManager: packageManagerAnswer.packageManager as 'npm' | 'yarn' | 'pnpm',
     initGit: otherAnswers.initGit as boolean,
     installDeps: otherAnswers.installDeps as boolean,
+    createVscodeConfig: otherAnswers.createVscodeConfig as boolean,
   };
 }
 
@@ -244,9 +253,20 @@ export async function init(projectName: string | undefined, options: CLIOptions)
   }
 
   // 获取选中的插件
-  const selectedPlugins = config.plugins
+  let selectedPlugins = config.plugins
     .map((name) => pluginMap.get(name))
     .filter((p): p is NonNullable<typeof p> => p !== undefined);
+
+  // 如果选择了 stylelint，根据样式类型动态修改依赖
+  const hasStylelint = selectedPlugins.some(p => p.name === 'stylelint');
+  if (hasStylelint) {
+    const { createStylelintPlugin } = await import('../plugins/stylelint.js');
+    const stylelintPluginInstance = createStylelintPlugin(config.styleType);
+    // 替换原有的 stylelint 插件
+    selectedPlugins = selectedPlugins.map(p => 
+      p.name === 'stylelint' ? stylelintPluginInstance : p
+    );
+  }
 
   logger.info(`创建项目: ${config.projectName}`);
   logger.info(`项目类型: ${config.projectType}`);
@@ -329,6 +349,24 @@ export async function init(projectName: string | undefined, options: CLIOptions)
   } catch (error) {
     spinner.fail('生成 package.json 失败');
     throw error;
+  }
+
+  // 创建 VSCode 配置
+  if (config.createVscodeConfig) {
+    spinner.start('创建 VSCode 配置...');
+    try {
+      await createVscodeConfig(projectPath, {
+        projectType: config.projectType,
+        styleType: config.styleType,
+        hasStylelint: config.plugins.includes('stylelint'),
+        hasPrettier: config.plugins.includes('prettier'),
+        hasEslint: config.plugins.includes('eslint'),
+      });
+      spinner.succeed('VSCode 配置创建完成');
+    } catch (error) {
+      spinner.fail('创建 VSCode 配置失败');
+      throw error;
+    }
   }
 
   // 执行插件安装后回调

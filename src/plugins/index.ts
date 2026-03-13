@@ -2,6 +2,7 @@ import type { Plugin } from '../types/index.js';
 import { typescriptPlugin } from './typescript.js';
 import { eslintPlugin } from './eslint.js';
 import { prettierPlugin } from './prettier.js';
+import { stylelintPlugin } from './stylelint.js';
 import { jestPlugin } from './jest.js';
 import { vitestPlugin } from './vitest.js';
 import { huskyPlugin } from './husky.js';
@@ -17,6 +18,7 @@ export const plugins: Plugin[] = [
   typescriptPlugin,
   eslintPlugin,
   prettierPlugin,
+  stylelintPlugin,
   jestPlugin,
   vitestPlugin,
   huskyPlugin,

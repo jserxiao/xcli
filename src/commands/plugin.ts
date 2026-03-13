@@ -41,19 +41,37 @@ export async function addPlugin(pluginNames: string[]): Promise<void> {
   }
 
   // 获取插件实例
-  const pluginsToAdd = selectedPlugins
+  let pluginsToAdd = selectedPlugins
     .map((name) => pluginMap.get(name))
     .filter((p): p is NonNullable<typeof p> => p !== undefined);
 
   // 读取 package.json
   const packageJson = await fs.readJson(packageJsonPath);
 
+  // 检测项目的样式类型
+  let detectedStyleType: 'css' | 'less' | 'scss' = 'css';
+  if (packageJson.devDependencies?.less || await fs.pathExists(path.join(currentDir, 'src', 'index.less'))) {
+    detectedStyleType = 'less';
+  } else if (packageJson.devDependencies?.sass || await fs.pathExists(path.join(currentDir, 'src', 'index.scss'))) {
+    detectedStyleType = 'scss';
+  }
+
+  // 如果添加 stylelint，根据样式类型动态修改依赖
+  const hasStylelint = pluginsToAdd.some(p => p.name === 'stylelint');
+  if (hasStylelint) {
+    const { createStylelintPlugin } = await import('../plugins/stylelint.js');
+    const stylelintPluginInstance = createStylelintPlugin(detectedStyleType);
+    pluginsToAdd = pluginsToAdd.map(p => 
+      p.name === 'stylelint' ? stylelintPluginInstance : p
+    );
+  }
+
   // 构建上下文
   const context: PluginContext = {
     projectName: packageJson.name,
     projectPath: currentDir,
     projectType: 'library', // 插件管理默认使用 library 类型
-    styleType: 'css', // 插件管理默认使用 css
+    styleType: detectedStyleType, // 使用检测到的样式类型
     stateManager: 'none', // 插件管理默认不使用状态管理
     httpClient: 'none', // 插件管理默认不使用 HTTP 请求库
     selectedPlugins: selectedPlugins,

@@ -230,6 +230,54 @@ xcli i my-app -t react -h none -d
 | `npm` | Node.js 默认包管理器 |
 | `yarn` | Facebook 开发，快速稳定 |
 
+## VSCode 配置
+
+初始化时会询问是否创建 VSCode 配置，选择「是」会生成 `.vscode` 目录，包含：
+
+### 生成的文件
+
+| 文件 | 说明 |
+|------|------|
+| `settings.json` | 编辑器设置（格式化、ESLint、TypeScript 等） |
+| `extensions.json` | 推荐扩展列表 |
+| `launch.json` | 调试配置 |
+
+### settings.json 配置内容
+
+根据项目类型和选择的插件，会自动配置：
+
+- **编辑器设置**：保存时格式化、Tab 大小、换行符等
+- **ESLint**：保存时自动修复、文件类型验证
+- **Prettier**：使用项目配置、EditorConfig 集成
+- **Stylelint**：样式文件验证（如果选择了 Stylelint）
+- **TypeScript**：使用工作区 TypeScript 版本
+- **项目特定**：React (Emmet)、Vue (Volar) 相关配置
+
+### 推荐扩展
+
+打开项目时，VSCode 会提示安装推荐扩展：
+
+| 扩展 | 说明 |
+|------|------|
+| ESLint | 代码检查 |
+| Prettier | 代码格式化 |
+| EditorConfig | 编辑器配置同步 |
+| Error Lens | 行内错误显示 |
+| Code Spell Checker | 拼写检查 |
+| TypeScript Nightly | 最新 TypeScript 支持 |
+
+**React 项目额外推荐**：
+- ES7+ React/Redux/React-Native snippets
+
+**Vue 项目额外推荐**：
+- Vue - Official (Volar)
+- Vue Snippets
+
+### 调试配置
+
+- **React/Vue 项目**：Chrome 调试配置（连接 localhost:5173）
+- **Library 项目**：Node.js 调试当前文件
+
 ## 创建后操作
 
 ```bash

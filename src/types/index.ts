@@ -110,6 +110,8 @@ export interface ProjectConfig {
   initGit: boolean;
   /** 是否立即安装依赖 */
   installDeps: boolean;
+  /** 是否创建 VSCode 配置 */
+  createVscodeConfig: boolean;
 }
 
 /**
