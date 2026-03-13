@@ -9,7 +9,8 @@ xcli 采用可插拔的插件架构，你可以根据项目需求选择启用不
 ├── 代码规范
 │   ├── TypeScript   - TypeScript 语言支持
 │   ├── ESLint       - 代码质量检查
-│   └── Prettier     - 代码格式化
+│   ├── Prettier     - 代码格式化
+│   └── Stylelint    - 样式代码检查
 │
 ├── 构建工具
 │   ├── Vite         - 下一代前端构建工具
@@ -34,6 +35,7 @@ xcli 采用可插拔的插件架构，你可以根据项目需求选择启用不
 | TypeScript | TypeScript 支持（强制启用） |
 | ESLint | 代码检查 |
 | Prettier | 代码格式化 |
+| Stylelint | 样式代码检查 |
 | Vite | React/Vue 项目自动启用 |
 
 ## 插件列表
@@ -45,6 +47,7 @@ xcli 采用可插拔的插件架构，你可以根据项目需求选择启用不
 | `typescript` | TypeScript | TypeScript 语言支持，生成 `tsconfig.json` |
 | `eslint` | ESLint | 代码质量检查，支持 React/Vue 规则 |
 | `prettier` | Prettier | 代码格式化，与 ESLint 集成 |
+| `stylelint` | Stylelint | 样式代码检查，支持 Less/SCSS/CSS |
 
 ### 构建工具
 
@@ -74,7 +77,7 @@ xcli 采用可插拔的插件架构，你可以根据项目需求选择启用不
 
 ```bash
 xcli init my-app -t react --default
-# 包含: TypeScript, ESLint, Prettier, Vite
+# 包含: TypeScript, ESLint, Prettier, Stylelint, Vite
 ```
 
 可选添加：
@@ -85,7 +88,7 @@ xcli init my-app -t react --default
 
 ```bash
 xcli init my-app -t vue --default
-# 包含: TypeScript, ESLint, Prettier, Vite
+# 包含: TypeScript, ESLint, Prettier, Stylelint, Vite
 ```
 
 ### Library 项目推荐
@@ -108,6 +111,8 @@ my-project/
 ├── tsconfig.json        # TypeScript
 ├── .eslintrc.json       # ESLint
 ├── .prettierrc          # Prettier
+├── .stylelintrc.json    # Stylelint
+├── .stylelintignore     # Stylelint 忽略文件
 ├── vite.config.ts       # Vite
 ├── vitest.config.ts     # Vitest
 ├── jest.config.js       # Jest
@@ -119,7 +124,7 @@ my-project/
 
 ## 下一步
 
-- [代码规范插件](/plugins/linting) - TypeScript、ESLint、Prettier
+- [代码规范插件](/plugins/linting) - TypeScript、ESLint、Prettier、Stylelint
 - [构建工具插件](/plugins/bundler) - Vite、Rollup、Webpack
 - [测试工具插件](/plugins/testing) - Jest、Vitest
 - [Git 工具插件](/plugins/git) - Husky、Commitlint

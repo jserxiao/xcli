@@ -62,7 +62,7 @@ export const stylelintPlugin: Plugin = {
   displayName: 'Stylelint',
   description: '添加样式代码规范检查',
   category: 'linter',
-  defaultEnabled: false,
+  defaultEnabled: true,
   devDependencies: {
     stylelint: '^16.2.0',
     'stylelint-config-standard': '^36.0.0',

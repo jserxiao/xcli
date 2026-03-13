@@ -53,6 +53,7 @@ xcli p ls
   ○ typescript   TypeScript 支持
   ○ eslint       ESLint 代码检查
   ○ prettier     Prettier 代码格式化
+  ○ stylelint    Stylelint 样式检查
 
 构建工具:
   ○ vite         Vite 构建工具
@@ -109,6 +110,7 @@ xcli plugin list
 | typescript | `tsconfig.json` |
 | eslint | `.eslintrc.json` |
 | prettier | `.prettierrc` |
+| stylelint | `.stylelintrc.json`, `.stylelintignore` |
 | vite | `vite.config.ts` |
 | jest | `jest.config.js` |
 | vitest | `vitest.config.ts` |

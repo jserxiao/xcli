@@ -26,12 +26,15 @@ features:
   - icon: 🗃️
     title: 状态管理
     details: React 可选 Redux Toolkit 或 MobX，Vue 默认集成 Pinia 状态管理
+  - icon: 🌐
+    title: HTTP 请求封装
+    details: 可选 Axios 或 Fetch 封装，提供拦截器、超时控制、统一错误处理
   - icon: 🎨
     title: 样式预处理器
     details: 支持 CSS、Less、Sass 三种样式预处理器，自动配置 PostCSS 和 Autoprefixer
   - icon: 🔌
     title: 可插拔插件
-    details: 灵活的插件系统，按需启用 TypeScript、ESLint、Prettier、Vitest 等
+    details: 灵活的插件系统，按需启用 TypeScript、ESLint、Prettier、Stylelint、Vitest 等
   - icon: 📦
     title: 构建工具集成
     details: 内置 Vite、Rollup、Webpack 构建配置，支持老旧浏览器兼容

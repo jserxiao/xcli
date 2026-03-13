@@ -34,10 +34,12 @@ xcli i my-project
 4. **项目类型** - 选择 library / react / vue
 5. **样式预处理器** - 选择 css / less / scss（仅 React/Vue）
 6. **状态管理** - 选择状态管理方案（仅 React/Vue）
-7. **包管理器** - 选择 pnpm / npm / yarn
-8. **插件选择** - 选择需要的插件
-9. **Git 初始化** - 是否初始化 Git 仓库
-10. **依赖安装** - 是否立即安装依赖
+7. **HTTP 请求库** - 选择 axios / fetch / none（仅 React/Vue）
+8. **包管理器** - 选择 pnpm / npm / yarn
+9. **插件选择** - 选择需要的插件
+10. **VSCode 配置** - 是否创建 .vscode 配置
+11. **Git 初始化** - 是否初始化 Git 仓库
+12. **依赖安装** - 是否立即安装依赖
 
 ### 使用默认配置
 
@@ -73,12 +75,15 @@ xcli i my-project -t react -s scss -m redux -p pnpm -d
 | `--template <name>` | `-t` | 项目类型：`library` / `react` / `vue` |
 | `--style <type>` | `-s` | 样式预处理器：`css` / `less` / `scss` |
 | `--state-manager <type>` | `-m` | 状态管理：`none` / `redux` / `mobx` / `pinia` |
+| `--http-client <type>` | `-h` | HTTP 请求库：`axios` / `fetch` / `none` |
 | `--package-manager <name>` | `-p` | 包管理器：`pnpm` / `npm` / `yarn` |
 | `--skip-install` | `-si` | 跳过依赖安装 |
 | `--skip-git` | `-sg` | 跳过 Git 初始化 |
 | `--default` | `-d` | 使用默认配置 |
 
 ## 状态管理
+
+React/Vue 项目可选择状态管理方案：
 
 ### React 项目
 
@@ -89,10 +94,17 @@ xcli i my-project -t react -s scss -m redux -p pnpm -d
 | `none` | 不使用状态管理 |
 
 **Redux Toolkit 特性**：
-- 内置 Thunk 中间件支持异步 action
-- RTK Query 数据请求中间件
+- 开箱即用的最佳实践配置
+- 内置 Immer 不可变状态处理
+- 支持 `createAsyncThunk` 异步 action
 - 类型安全的 hooks (`useAppDispatch`, `useAppSelector`)
 - 开发环境 Redux DevTools 支持
+
+**MobX 特性**：
+- 响应式编程，自动追踪依赖
+- 简单直观的 API，学习成本低
+- 使用 `mobx-react-lite` 轻量级集成
+- 支持 `observer` 自动响应状态变化
 
 ```bash
 # React + Redux Toolkit（默认）
@@ -112,6 +124,12 @@ xcli i my-app -t react -m none -d
 | `pinia` | Pinia - Vue 官方状态管理（默认） |
 | `none` | 不使用状态管理 |
 
+**Pinia 特性**：
+- Vue 3 官方推荐，完整的 TypeScript 支持
+- Composition API 风格，与 Vue 3 完美契合
+- 支持 DevTools 调试
+- 轻量级，无 mutations，只有 state、getters、actions
+
 ```bash
 # Vue + Pinia（默认）
 xcli i my-app -t vue -d
@@ -119,6 +137,29 @@ xcli i my-app -t vue -d
 # Vue 无状态管理
 xcli i my-app -t vue -m none -d
 ```
+
+## HTTP 请求库
+
+React/Vue 项目可选择 HTTP 请求库：
+
+| 选项 | 说明 |
+|------|------|
+| `axios` | 功能丰富的 HTTP 客户端，支持拦截器、取消请求等（默认） |
+| `fetch` | 原生 API 封装，轻量无依赖 |
+| `none` | 不使用 HTTP 请求库 |
+
+```bash
+# 使用 Axios（默认）
+xcli i my-app -t react -d
+
+# 使用 Fetch
+xcli i my-app -t react -h fetch -d
+
+# 不使用 HTTP 请求库
+xcli i my-app -t react -h none -d
+```
+
+生成的封装文件位于 `src/api/request.ts`，提供统一的请求接口。
 
 ## 项目启动
 

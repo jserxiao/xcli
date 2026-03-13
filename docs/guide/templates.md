@@ -29,6 +29,8 @@ my-project/
 │   │   └── Layout.tsx
 │   ├── router/             # 路由配置
 │   │   └── index.tsx
+│   ├── api/                # API 请求封装
+│   │   └── request.ts      # HTTP 请求封装
 │   ├── store/              # 状态管理 (可选)
 │   │   └── ...
 │   └── assets/             # 静态资源
@@ -46,6 +48,7 @@ my-project/
 - 🌐 **浏览器兼容** - Autoprefixer + Legacy 插件
 - 📁 **Monorepo** - pnpm workspace 多包管理
 - 🗃️ **状态管理** - 可选 Redux Toolkit / MobX
+- 🌐 **HTTP 请求** - 可选 Axios / Fetch 封装
 
 ### 状态管理选项
 
@@ -141,6 +144,8 @@ my-project/
 │   ├── components/         # 通用组件
 │   ├── router/             # 路由配置
 │   │   └── index.ts
+│   ├── api/                # API 请求封装
+│   │   └── request.ts      # HTTP 请求封装
 │   ├── store/              # Pinia 状态管理
 │   │   └── ...
 │   └── assets/             # 静态资源
@@ -157,6 +162,7 @@ my-project/
 - 🎨 **样式预处理器** - CSS / Less / Sass
 - 📁 **Monorepo** - pnpm workspace 多包管理
 - 🗃️ **Pinia** - Vue 官方状态管理（默认集成）
+- 🌐 **HTTP 请求** - 可选 Axios / Fetch 封装
 
 ### Pinia 状态管理
 
