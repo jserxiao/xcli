@@ -1,10 +1,8 @@
-import type { ProjectType, PluginContext, StyleType, StateManagerType, HttpClientType } from '../types/index.js';
+import type { ProjectType, PluginContext, StyleType, StateManagerType, HttpClientType, BundlerType } from '../types/index.js';
 import { createBaseFiles } from '../utils/fileGenerator.js';
 import { libraryTemplate } from './library.js';
 import { reactTemplate } from './react.js';
 import { vueTemplate } from './vue.js';
-
-type BundlerType = 'vite' | 'webpack' | 'rollup' | 'none';
 
 /**
  * 获取打包工具类型

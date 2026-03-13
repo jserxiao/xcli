@@ -1,8 +1,6 @@
-import type { ProjectType, PluginContext, StyleType, StateManagerType, HttpClientType } from '../types/index.js';
+import type { ProjectType, PluginContext, StyleType, StateManagerType, HttpClientType, BundlerType } from '../types/index.js';
 import path from 'path';
 import fs from 'fs-extra';
-
-type BundlerType = 'vite' | 'webpack' | 'rollup' | 'none';
 
 /**
  * 模板生成器接口

@@ -7,7 +7,7 @@ import {
   pluginMap,
   getPluginChoices,
 } from '../plugins/index.js';
-import type { ProjectConfig, CLIOptions, PluginContext, ProjectType, StyleType, StateManagerType, HttpClientType } from '../types/index.js';
+import type { ProjectConfig, CLIOptions, PluginContext, ProjectType, StyleType, StateManagerType, HttpClientType, BundlerType } from '../types/index.js';
 import {
   generatePackageJson,
   installDependencies,
@@ -70,7 +70,7 @@ async function getProjectConfig(
       styleType,
       stateManager,
       httpClient,
-      bundler: (projectType === 'react' || projectType === 'vue') ? (options.bundler || 'vite') as 'vite' | 'webpack' | 'rollup' | 'none' : 'none',
+      bundler: (projectType === 'react' || projectType === 'vue') ? (options.bundler || 'vite') as BundlerType : 'none',
       useTypeScript: true,
       plugins: defaultPlugins,
       packageManager: options.packageManager || 'pnpm',
@@ -220,7 +220,7 @@ async function getProjectConfig(
     styleType,
     stateManager,
     httpClient,
-    bundler: (projectType === 'react' || projectType === 'vue') ? (options.bundler || 'vite') as 'vite' | 'webpack' | 'rollup' | 'none' : 'none',
+    bundler: (projectType === 'react' || projectType === 'vue') ? (options.bundler || 'vite') as BundlerType : 'none',
     useTypeScript: true,
     plugins: selectedPlugins,
     packageManager: packageManagerAnswer.packageManager as 'npm' | 'yarn' | 'pnpm',

@@ -1,4 +1,4 @@
-import type { ProjectType, PluginContext, StyleType, StateManagerType, HttpClientType } from '../types/index.js';
+import type { ProjectType, PluginContext, StyleType, StateManagerType, HttpClientType, BundlerType } from '../types/index.js';
 import path from 'path';
 import fs from 'fs-extra';
 import {
@@ -16,8 +16,6 @@ import {
   getPiniaCounterStore,
 } from './shared.js';
 import { axiosPlugin, fetchPlugin } from '../plugins/http-client/index.js';
-
-type BundlerType = 'vite' | 'webpack' | 'rollup' | 'none';
 
 /**
  * 获取打包工具类型

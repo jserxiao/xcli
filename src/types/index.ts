@@ -52,6 +52,8 @@ export interface PluginContext {
   stateManager: StateManagerType;
   /** HTTP 请求库 */
   httpClient: HttpClientType;
+  /** 打包工具 */
+  bundler: BundlerType;
   /** 用户选择的插件列表 */
   selectedPlugins: string[];
   /** 是否使用 TypeScript */
@@ -83,6 +85,11 @@ export type StateManagerType = 'none' | 'redux' | 'mobx' | 'pinia';
 export type HttpClientType = 'axios' | 'fetch' | 'none';
 
 /**
+ * 打包工具类型
+ */
+export type BundlerType = 'vite' | 'webpack' | 'rollup' | 'none';
+
+/**
  * 项目配置
  */
 export interface ProjectConfig {
@@ -100,6 +107,8 @@ export interface ProjectConfig {
   stateManager: StateManagerType;
   /** HTTP 请求库 */
   httpClient: HttpClientType;
+  /** 打包工具 */
+  bundler: BundlerType;
   /** 是否使用 TypeScript */
   useTypeScript: boolean;
   /** 选择的插件 */
@@ -127,9 +136,9 @@ export interface CLIOptions {
   /** 状态管理 */
   stateManager?: 'none' | 'redux' | 'mobx' | 'pinia';
   /** HTTP 请求库 */
-  httpClient?: 'axios' | 'fetch' | 'none';
+  httpClient?: HttpClientType;
   /** 打包工具 */
-  bundler?: 'vite' | 'webpack' | 'rollup' | 'none';
+  bundler?: BundlerType;
   /** 跳过安装依赖 */
   skipInstall?: boolean;
   /** 跳过 Git 初始化 */

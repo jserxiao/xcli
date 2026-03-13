@@ -1,7 +1,9 @@
+import type { BundlerType } from '../../../types/index.js';
+
 /**
  * Redux Store 模板
  */
-export function getReduxStoreIndex(bundler: 'vite' | 'webpack' | 'rollup' | 'none' = 'vite'): string {
+export function getReduxStoreIndex(bundler: BundlerType = 'vite'): string {
   const isDev = bundler === 'vite' 
     ? 'import.meta.env.DEV' 
     : 'process.env.NODE_ENV === "development"';
@@ -161,7 +163,7 @@ export const { useGetUsersQuery, useGetUserQuery, useCreateUserMutation } = apiS
 `;
 }
 
-export function getReduxLoggerMiddleware(bundler: 'vite' | 'webpack' | 'rollup' | 'none' = 'vite'): string {
+export function getReduxLoggerMiddleware(bundler: BundlerType = 'vite'): string {
   const isDev = bundler === 'vite' 
     ? 'import.meta.env.DEV' 
     : 'process.env.NODE_ENV === "development"';

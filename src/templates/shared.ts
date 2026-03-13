@@ -38,7 +38,7 @@ export {
 
 // ============ 配置文件模板（保留在 shared.ts 中，因为它们较为简短） ============
 
-import type { StyleType } from '../types/index.js';
+import type { StyleType, BundlerType } from '../types/index.js';
 import path from 'path';
 import fs from 'fs-extra';
 
@@ -174,7 +174,7 @@ declare module '*.vue' {
 /**
  * 获取基础 tsconfig 配置
  */
-export function getBaseTsConfig(framework: 'react' | 'vue', bundler: 'vite' | 'webpack' | 'rollup' | 'none' = 'vite'): Record<string, unknown> {
+export function getBaseTsConfig(framework: 'react' | 'vue', bundler: BundlerType = 'vite'): Record<string, unknown> {
   const isVite = bundler === 'vite';
 
   const compilerOptions: Record<string, unknown> = {
@@ -246,7 +246,7 @@ export function getSharedTsConfig(): Record<string, unknown> {
 export async function createRootConfigFiles(
   projectPath: string,
   framework: 'react' | 'vue',
-  bundler: 'vite' | 'webpack' | 'rollup' | 'none' = 'vite'
+  bundler: BundlerType = 'vite'
 ): Promise<void> {
   // .gitignore
   await fs.writeFile(

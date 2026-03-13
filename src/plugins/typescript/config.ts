@@ -1,9 +1,9 @@
-import type { PluginContext } from '../../types/index.js';
+import type { PluginContext, BundlerType } from '../../types/index.js';
 
 /**
  * React tsconfig 配置
  */
-export function getReactTsConfig(bundler: 'vite' | 'webpack' | 'rollup' | 'none' = 'vite'): object {
+export function getReactTsConfig(bundler: BundlerType = 'vite'): object {
   const isVite = bundler === 'vite';
 
   const compilerOptions: Record<string, unknown> = {
@@ -43,7 +43,7 @@ export function getReactTsConfig(bundler: 'vite' | 'webpack' | 'rollup' | 'none'
 /**
  * Vue tsconfig 配置
  */
-export function getVueTsConfig(bundler: 'vite' | 'webpack' | 'rollup' | 'none' = 'vite'): object {
+export function getVueTsConfig(bundler: BundlerType = 'vite'): object {
   const isVite = bundler === 'vite';
 
   const compilerOptions: Record<string, unknown> = {
