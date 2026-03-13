@@ -1,4 +1,5 @@
-import type { Plugin } from '../types/index.js';
+import type { Plugin } from '../../types/index.js';
+import { GIT_VERSIONS } from '../../constants/index.js';
 
 export const commitlintPlugin: Plugin = {
   name: 'commitlint',
@@ -7,8 +8,8 @@ export const commitlintPlugin: Plugin = {
   category: 'git',
   defaultEnabled: false,
   devDependencies: {
-    '@commitlint/cli': '^18.4.4',
-    '@commitlint/config-conventional': '^18.4.4',
+    '@commitlint/cli': GIT_VERSIONS['@commitlint/cli'],
+    '@commitlint/config-conventional': GIT_VERSIONS['@commitlint/config-conventional'],
   },
   files: [
     {

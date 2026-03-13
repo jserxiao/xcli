@@ -1,4 +1,5 @@
-import type { Plugin } from '../types/index.js';
+import type { Plugin } from '../../types/index.js';
+import { TEST_VERSIONS } from '../../constants/index.js';
 
 export const jestPlugin: Plugin = {
   name: 'jest',
@@ -7,9 +8,9 @@ export const jestPlugin: Plugin = {
   category: 'test',
   defaultEnabled: false,
   devDependencies: {
-    jest: '^29.7.0',
-    '@types/jest': '^29.5.11',
-    'ts-jest': '^29.1.1',
+    jest: TEST_VERSIONS.jest,
+    '@types/jest': TEST_VERSIONS['@types/jest'],
+    'ts-jest': TEST_VERSIONS['ts-jest'],
   },
   scripts: {
     test: 'jest',

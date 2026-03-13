@@ -1,18 +1,14 @@
-import type { Plugin, PluginContext } from '../types/index.js';
+import type { Plugin, PluginContext } from '../../types/index.js';
+import { BUNDLER_VERSIONS, STYLE_VERSIONS } from '../../constants/index.js';
 
 /**
- * 生成 Vite 配置文件内容
+ * 获取 React Vite 配置
  */
-function getViteConfig(context: PluginContext): string {
-  const { projectType, stateManager } = context;
-
-  // React 项目的 monorepo 配置
-  if (projectType === 'react') {
-    return `import { defineConfig } from 'vite';
+function getReactViteConfig(): string {
+  return `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';
 import autoprefixer from 'autoprefixer';
-import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -22,16 +18,6 @@ export default defineConfig({
       targets: ['defaults', 'not IE 11'],
     }),
   ],
-  resolve: {
-    alias: {
-      shared: resolve(__dirname, 'packages/shared/src'),
-      ui: resolve(__dirname, 'packages/ui/src'),
-    },
-    dedupe: ['react', 'react-dom', 'react-router-dom'],
-  },
-  optimizeDeps: {
-    include: ['shared', 'ui'],
-  },
   css: {
     postcss: {
       plugins: [autoprefixer()],
@@ -40,28 +26,22 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
-    watch: {
-      ignored: ['!**/node_modules/**', '!**/packages/**'],
-    },
   },
   build: {
     sourcemap: true,
   },
 });
 `;
-  }
+}
 
-  // Vue 项目的 monorepo 配置
-  if (projectType === 'vue') {
-    const dedupeList = stateManager === 'pinia' 
-      ? "'vue', 'vue-router', 'pinia'" 
-      : "'vue', 'vue-router'";
-    
-    return `import { defineConfig } from 'vite';
+/**
+ * 获取 Vue Vite 配置
+ */
+function getVueViteConfig(): string {
+  return `import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import legacy from '@vitejs/plugin-legacy';
 import autoprefixer from 'autoprefixer';
-import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -71,42 +51,26 @@ export default defineConfig({
       targets: ['defaults', 'not IE 11'],
     }),
   ],
-  resolve: {
-    alias: {
-      shared: resolve(__dirname, 'packages/shared/src'),
-      ui: resolve(__dirname, 'packages/ui/src'),
-    },
-    dedupe: [${dedupeList}],
-  },
-  optimizeDeps: {
-    include: ['shared', 'ui'],
-  },
   css: {
     postcss: {
-      plugins: [
-        autoprefixer({
-          grid: true,
-          flexbox: true,
-          overrideBrowserslist: ['defaults', 'ie >= 10']
-        })
-      ],
+      plugins: [autoprefixer()],
     },
   },
   server: {
     port: 3000,
     open: true,
-    watch: {
-      ignored: ['!**/node_modules/**', '!**/packages/**'],
-    },
   },
   build: {
     sourcemap: true,
   },
 });
 `;
-  }
+}
 
-  // Library 模式的默认配置
+/**
+ * 获取 Library Vite 配置
+ */
+function getLibraryViteConfig(): string {
   return `import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 import { resolve } from 'path';
@@ -121,13 +85,7 @@ export default defineConfig({
   ],
   css: {
     postcss: {
-      plugins: [
-        autoprefixer({
-          grid: true,
-          flexbox: true,
-          overrideBrowserslist: ['defaults', 'ie >= 10']
-        })
-      ],
+      plugins: [autoprefixer()],
     },
   },
   build: {
@@ -146,6 +104,22 @@ export default defineConfig({
 `;
 }
 
+/**
+ * 根据项目类型获取 Vite 配置
+ */
+function getViteConfig(context: PluginContext): string {
+  const { projectType } = context;
+
+  switch (projectType) {
+    case 'react':
+      return getReactViteConfig();
+    case 'vue':
+      return getVueViteConfig();
+    default:
+      return getLibraryViteConfig();
+  }
+}
+
 export const vitePlugin: Plugin = {
   name: 'vite',
   displayName: 'Vite',
@@ -153,9 +127,9 @@ export const vitePlugin: Plugin = {
   category: 'bundler',
   defaultEnabled: false,
   devDependencies: {
-    vite: '^5.0.12',
-    '@vitejs/plugin-legacy': '^5.3.0',
-    autoprefixer: '^10.4.17',
+    vite: BUNDLER_VERSIONS.vite,
+    '@vitejs/plugin-legacy': BUNDLER_VERSIONS['@vitejs/plugin-legacy'],
+    autoprefixer: STYLE_VERSIONS.autoprefixer,
   },
   scripts: {
     preview: 'vite preview',

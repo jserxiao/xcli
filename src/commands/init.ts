@@ -23,7 +23,7 @@ import {
   getProjectDependencies,
   getProjectScripts,
 } from '../templates/index.js';
-import { getHttpClientChoices } from '../plugins/http-client.js';
+import { getHttpClientChoices } from '../plugins/http-client/index.js';
 import { createVscodeConfig } from '../templates/shared.js';
 
 /**
@@ -40,9 +40,21 @@ async function getProjectConfig(
     const styleType = (options.style as StyleType) || 'less';
     const defaultPlugins = plugins.filter((p) => p.defaultEnabled).map((p) => p.name);
 
-    // React/Vue 项目自动添加 vite 插件
-    if ((projectType === 'react' || projectType === 'vue') && !defaultPlugins.includes('vite')) {
-      defaultPlugins.push('vite');
+    // React/Vue 项目根据 --bundler 选项添加打包工具插件
+    if (projectType === 'react' || projectType === 'vue') {
+      const bundler = options.bundler || 'vite';
+      // 移除其他打包工具插件
+      const bundlerPlugins = ['vite', 'webpack', 'rollup'];
+      for (const bp of bundlerPlugins) {
+        const index = defaultPlugins.indexOf(bp);
+        if (index > -1) {
+          defaultPlugins.splice(index, 1);
+        }
+      }
+      // 添加指定的打包工具插件
+      if (bundler !== 'none' && !defaultPlugins.includes(bundler)) {
+        defaultPlugins.push(bundler);
+      }
     }
 
     // 状态管理：命令行指定 > 默认值（Vue 用 pinia，React 用 redux）
@@ -58,6 +70,7 @@ async function getProjectConfig(
       styleType,
       stateManager,
       httpClient,
+      bundler: (projectType === 'react' || projectType === 'vue') ? (options.bundler || 'vite') as 'vite' | 'webpack' | 'rollup' | 'none' : 'none',
       useTypeScript: true,
       plugins: defaultPlugins,
       packageManager: options.packageManager || 'pnpm',
@@ -207,6 +220,7 @@ async function getProjectConfig(
     styleType,
     stateManager,
     httpClient,
+    bundler: (projectType === 'react' || projectType === 'vue') ? (options.bundler || 'vite') as 'vite' | 'webpack' | 'rollup' | 'none' : 'none',
     useTypeScript: true,
     plugins: selectedPlugins,
     packageManager: packageManagerAnswer.packageManager as 'npm' | 'yarn' | 'pnpm',
@@ -260,7 +274,7 @@ export async function init(projectName: string | undefined, options: CLIOptions)
   // 如果选择了 stylelint，根据样式类型动态修改依赖
   const hasStylelint = selectedPlugins.some(p => p.name === 'stylelint');
   if (hasStylelint) {
-    const { createStylelintPlugin } = await import('../plugins/stylelint.js');
+    const { createStylelintPlugin } = await import('../plugins/stylelint/index.js');
     const stylelintPluginInstance = createStylelintPlugin(config.styleType);
     // 替换原有的 stylelint 插件
     selectedPlugins = selectedPlugins.map(p => 
@@ -287,6 +301,7 @@ export async function init(projectName: string | undefined, options: CLIOptions)
       styleType: config.styleType,
       stateManager: config.stateManager,
       httpClient: config.httpClient,
+      bundler: config.bundler,
       selectedPlugins: config.plugins,
       useTypeScript: config.useTypeScript,
       packageManager: config.packageManager,
@@ -311,6 +326,7 @@ export async function init(projectName: string | undefined, options: CLIOptions)
     styleType: config.styleType,
     stateManager: config.stateManager,
     httpClient: config.httpClient,
+    bundler: config.bundler,
     selectedPlugins: config.plugins,
     useTypeScript: config.useTypeScript,
     packageManager: config.packageManager,
@@ -324,7 +340,20 @@ export async function init(projectName: string | undefined, options: CLIOptions)
   spinner.start('生成配置文件...');
   try {
     const generator = new FileGenerator(context);
-    await generator.generateFromPlugins(selectedPlugins);
+    // 对于 React/Vue 项目，打包工具配置已在模板中生成，需要过滤掉
+    const bundlerFiles = ['webpack.config.cjs', 'vite.config.ts', 'rollup.config.js'];
+    const filteredPlugins = selectedPlugins.map((plugin) => {
+      if ((config.projectType === 'react' || config.projectType === 'vue') &&
+          (plugin.name === 'webpack' || plugin.name === 'vite' || plugin.name === 'rollup')) {
+        // 返回一个不包含配置文件的插件版本（只保留依赖和脚本）
+        return {
+          ...plugin,
+          files: plugin.files?.filter((f) => !bundlerFiles.includes(f.path)) || [],
+        };
+      }
+      return plugin;
+    });
+    await generator.generateFromPlugins(filteredPlugins);
     spinner.succeed('配置文件生成完成');
   } catch (error) {
     spinner.fail('生成配置文件失败');
@@ -335,8 +364,8 @@ export async function init(projectName: string | undefined, options: CLIOptions)
   spinner.start('生成 package.json...');
   try {
     // 合并项目模板的依赖和脚本
-    const templateDeps = getProjectDependencies(config.projectType, config.styleType, config.stateManager, config.httpClient);
-    const templateScripts = getProjectScripts(config.projectType);
+    const templateDeps = getProjectDependencies(config.projectType, config.styleType, config.stateManager, config.httpClient, config.plugins);
+    const templateScripts = getProjectScripts(config.projectType, config.plugins);
 
     await generatePackageJson(
       projectPath,

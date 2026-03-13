@@ -1,4 +1,5 @@
-import type { Plugin } from '../types/index.js';
+import type { Plugin } from '../../types/index.js';
+import { LINTER_VERSIONS } from '../../constants/index.js';
 
 export const prettierPlugin: Plugin = {
   name: 'prettier',
@@ -7,8 +8,8 @@ export const prettierPlugin: Plugin = {
   category: 'formatter',
   defaultEnabled: true,
   devDependencies: {
-    prettier: '^3.2.4',
-    'eslint-config-prettier': '^9.1.0',
+    prettier: LINTER_VERSIONS.prettier,
+    'eslint-config-prettier': LINTER_VERSIONS['eslint-config-prettier'],
   },
   scripts: {
     format: 'prettier --write "src/**/*.{ts,tsx,js,jsx,json,md}"',

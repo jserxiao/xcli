@@ -132,51 +132,134 @@ export default {
 
 ## Webpack
 
-Webpack 是功能强大的模块打包工具。
+Webpack 是功能强大的模块打包工具，适合 React/Vue 应用项目。
 
-### 生成的配置
+### 生成的配置（React 项目）
 
-```typescript
-// webpack.config.ts
-import path from 'path';
-import { fileURLToPath } from 'url';
+```javascript
+// webpack.config.cjs
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const isProduction = process.env.NODE_ENV === 'production';
+const isDevelopment = !isProduction;
 
-export default {
-  entry: './src/index.ts',
+module.exports = {
+  entry: './src/main.tsx',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'index.js',
-    library: {
-      type: 'module',
-    },
+    filename: isProduction ? 'js/[name].[contenthash:8].js' : 'js/[name].js',
+    chunkFilename: isProduction ? 'js/[name].[contenthash:8].chunk.js' : 'js/[name].chunk.js',
+    clean: true,
+    publicPath: '/',
+  },
+  mode: isProduction ? 'production' : 'development',
+  devtool: isProduction ? 'source-map' : 'eval-source-map',
+  devServer: {
+    port: 3000,
+    hot: true,
+    open: true,
+    historyApiFallback: true,
+    static: './public',
   },
   module: {
     rules: [
       {
-        test: /\.ts$/,
-        use: 'ts-loader',
+        test: /\.[jt]sx?$/,
         exclude: /node_modules/,
+        use: 'babel-loader',
+      },
+      {
+        test: /\.css$/,
+        use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'],
+      },
+      {
+        test: /\.less$/,
+        use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader', 'less-loader'],
+      },
+      {
+        test: /\.scss$/,
+        use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader', 'sass-loader'],
+      },
+      {
+        test: /\.(png|jpg|gif|svg)$/,
+        type: 'asset/resource',
+        generator: { filename: 'images/[hash][ext][query]' },
       },
     ],
   },
   resolve: {
-    extensions: ['.ts', '.js'],
+    extensions: ['.tsx', '.ts', '.jsx', '.js'],
+    alias: { '@': path.resolve(__dirname, 'src') },
   },
-  experiments: {
-    outputModule: true,
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: './index.html',
+      filename: 'index.html',
+    }),
+    new MiniCssExtractPlugin({
+      filename: isProduction ? 'css/[name].[contenthash:8].css' : 'css/[name].css',
+      chunkFilename: isProduction ? 'css/[name].[contenthash:8].chunk.css' : 'css/[name].chunk.css',
+    }),
+    isDevelopment && new ReactRefreshWebpackPlugin(),
+    process.env.ANALYZE && new BundleAnalyzerPlugin(),
+  ].filter(Boolean),
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        vendors: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+        },
+      },
+    },
   },
 };
 ```
+
+### 特性
+
+- 🔥 **热模块替换 (HMR)** - 开发时实时更新，无需刷新页面
+- 📦 **代码分割** - 自动拆分 vendor 和业务代码
+- 🎨 **CSS 提取** - 独立 CSS 文件，优化加载性能
+- 📊 **打包分析** - 通过 `ANALYZE=true pnpm build` 分析打包体积
+- 🗜️ **资源优化** - 文件名哈希、资源压缩
 
 ### 添加的脚本
 
 ```json
 {
   "scripts": {
+    "dev": "webpack serve --mode development",
     "build": "webpack --mode production",
-    "dev": "webpack --mode development --watch"
+    "build:analyze": "cross-env ANALYZE=true webpack --mode production"
+  }
+}
+```
+
+### 添加的依赖
+
+```json
+{
+  "devDependencies": {
+    "webpack": "^5.x",
+    "webpack-cli": "^5.x",
+    "webpack-dev-server": "^5.x",
+    "html-webpack-plugin": "^5.x",
+    "mini-css-extract-plugin": "^2.x",
+    "css-loader": "^7.x",
+    "style-loader": "^4.x",
+    "postcss-loader": "^8.x",
+    "babel-loader": "^9.x",
+    "@babel/core": "^7.x",
+    "@babel/preset-env": "^7.x",
+    "@babel/preset-react": "^7.x",
+    "@babel/preset-typescript": "^7.x"
   }
 }
 ```

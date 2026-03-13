@@ -128,6 +128,8 @@ export interface CLIOptions {
   stateManager?: 'none' | 'redux' | 'mobx' | 'pinia';
   /** HTTP 请求库 */
   httpClient?: 'axios' | 'fetch' | 'none';
+  /** 打包工具 */
+  bundler?: 'vite' | 'webpack' | 'rollup' | 'none';
   /** 跳过安装依赖 */
   skipInstall?: boolean;
   /** 跳过 Git 初始化 */

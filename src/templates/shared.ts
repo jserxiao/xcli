@@ -1,175 +1,46 @@
+/**
+ * 共享模板工具函数和配置
+ * 从独立文件中重新导出，便于查阅和修改
+ */
+
+// 从独立模板文件中导出样式相关函数
+export {
+  getStyleExt,
+  getBaseStyles,
+  getAppStyles,
+  getPageStyles,
+} from './files/shared/styles.js';
+
+// 从独立模板文件中导出配置
+export {
+  getAxiosConfig,
+  getFetchConfig,
+} from './files/shared/http-client.js';
+
+// 从独立模板文件中导出状态管理模板
+export {
+  getReduxStoreIndex,
+  getReduxCounterSlice,
+  getReduxApiSlice,
+  getReduxLoggerMiddleware,
+  getMobXCounterStore,
+  getMobXStoreIndex,
+  getPiniaStoreIndex,
+  getPiniaCounterStore,
+} from './files/shared/store.js';
+
+// 从独立模板文件中导出包生成器
+export {
+  createSharedPackage,
+  createReactUiPackage,
+  createVueUiPackage,
+} from './files/shared/packages.js';
+
+// ============ 配置文件模板（保留在 shared.ts 中，因为它们较为简短） ============
+
 import type { StyleType } from '../types/index.js';
 import path from 'path';
 import fs from 'fs-extra';
-
-// ============ 样式相关 ============
-
-/**
- * 获取样式文件扩展名
- */
-export function getStyleExt(styleType: StyleType): string {
-  switch (styleType) {
-    case 'less':
-      return 'less';
-    case 'scss':
-      return 'scss';
-    default:
-      return 'css';
-  }
-}
-
-/**
- * 获取基础样式内容
- */
-export function getBaseStyles(): string {
-  return `:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-}
-`;
-}
-
-/**
- * 获取 App 组件样式
- * @param styleType 样式类型
- * @param framework 框架类型，用于生成不同的 active class 名
- */
-export function getAppStyles(styleType: StyleType, framework: 'react' | 'vue' = 'react'): string {
-  const activeClass = framework === 'react' ? 'active' : 'router-link-active';
-
-  if (styleType === 'scss' || styleType === 'less') {
-    return `.app {
-  .nav {
-    display: flex;
-    gap: 1rem;
-    padding: 1rem 0;
-    border-bottom: 1px solid #333;
-    margin-bottom: 2rem;
-
-    a {
-      color: #646cff;
-      text-decoration: none;
-
-      &:hover {
-        color: #535bf2;
-      }
-
-      &.${activeClass} {
-        color: #535bf2;
-        font-weight: bold;
-      }
-    }
-  }
-
-  .main-content {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 2rem;
-    text-align: center;
-  }
-}`;
-  }
-
-  return `.app {
-  text-align: center;
-}
-
-.nav {
-  display: flex;
-  gap: 1rem;
-  padding: 1rem 0;
-  border-bottom: 1px solid #333;
-  margin-bottom: 2rem;
-}
-
-.nav a {
-  color: #646cff;
-  text-decoration: none;
-}
-
-.nav a:hover {
-  color: #535bf2;
-}
-
-.nav a.${activeClass} {
-  color: #535bf2;
-  font-weight: bold;
-}
-
-.main-content {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}`;
-}
-
-/**
- * 获取页面样式
- */
-export function getPageStyles(styleType: StyleType): string {
-  if (styleType === 'scss' || styleType === 'less') {
-    return `.page {
-  padding: 2rem;
-
-  h1 {
-    margin-bottom: 1rem;
-  }
-
-  p {
-    color: #888;
-  }
-}`;
-  }
-
-  return `.page {
-  padding: 2rem;
-}
-
-.page h1 {
-  margin-bottom: 1rem;
-}
-
-.page p {
-  color: #888;
-}
-`;
-}
-
-// ============ 配置文件模板 ============
 
 /**
  * 获取 .gitignore 内容
@@ -303,36 +174,42 @@ declare module '*.vue' {
 /**
  * 获取基础 tsconfig 配置
  */
-export function getBaseTsConfig(framework: 'react' | 'vue'): Record<string, unknown> {
-  return {
-    compilerOptions: {
-      target: 'ES2022',
-      module: 'ESNext',
-      moduleResolution: 'Node',
-      lib: ['ES2022', 'DOM'],
-      jsx: framework === 'react' ? 'react-jsx' : 'preserve',
-      outDir: './dist',
-      rootDir: './src',
-      strict: true,
-      esModuleInterop: true,
-      skipLibCheck: true,
-      forceConsistentCasingInFileNames: true,
-      declaration: true,
-      declarationMap: true,
-      sourceMap: true,
-      resolveJsonModule: true,
-      isolatedModules: true,
-      noEmit: true,
-      // Monorepo workspace 包路径映射
-      paths: {
-        'shared': ['./packages/shared/src/index.ts'],
-        'ui': ['./packages/ui/src/index.ts'],
-      },
-      // 包含 workspace 包的 baseUrl
-      baseUrl: '.',
+export function getBaseTsConfig(framework: 'react' | 'vue', bundler: 'vite' | 'webpack' | 'rollup' | 'none' = 'vite'): Record<string, unknown> {
+  const isVite = bundler === 'vite';
+
+  const compilerOptions: Record<string, unknown> = {
+    target: 'ES2022',
+    useDefineForClassFields: true,
+    module: 'ESNext',
+    lib: ['ES2022', 'DOM', 'DOM.Iterable'],
+    skipLibCheck: true,
+    strict: true,
+    noUnusedLocals: true,
+    noUnusedParameters: true,
+    noFallthroughCasesInSwitch: true,
+    moduleResolution: isVite ? 'bundler' : 'Node',
+    resolveJsonModule: true,
+    isolatedModules: true,
+    jsx: framework === 'react' ? 'react-jsx' : 'preserve',
+    // Monorepo workspace 包路径映射
+    paths: {
+      'shared': ['./packages/shared/src/index.ts'],
+      'ui': ['./packages/ui/src/index.ts'],
     },
-    include: ['src/**/*'],
-    exclude: ['node_modules', 'dist'],
+    // 包含 workspace 包的 baseUrl
+    baseUrl: '.',
+  };
+
+  // Vite 特定配置
+  if (isVite) {
+    compilerOptions.allowImportingTsExtensions = true;
+    compilerOptions.noEmit = true;
+  }
+
+  return {
+    compilerOptions,
+    include: ['src', 'packages/*/src'],
+    exclude: ['node_modules'],
   };
 }
 
@@ -361,295 +238,6 @@ export function getSharedTsConfig(): Record<string, unknown> {
   };
 }
 
-// ============ Monorepo Packages 生成器 ============
-
-/**
- * 创建 packages/shared 包
- */
-export async function createSharedPackage(projectPath: string): Promise<void> {
-  const sharedPath = path.join(projectPath, 'packages', 'shared');
-  await fs.ensureDir(path.join(sharedPath, 'src'));
-
-  // package.json
-  await fs.writeFile(
-    path.join(sharedPath, 'package.json'),
-    JSON.stringify({
-      name: 'shared',
-      version: '1.0.0',
-      private: true,
-      type: 'module',
-      main: './src/index.ts',
-      types: './src/index.ts',
-      exports: {
-        '.': {
-          types: './src/index.ts',
-          import: './src/index.ts',
-        },
-      },
-      scripts: {
-        build: 'tsc',
-        dev: 'tsc --watch',
-        clean: 'rm -rf dist node_modules',
-      },
-    }, null, 2),
-    'utf-8'
-  );
-
-  // tsconfig.json
-  await fs.writeFile(
-    path.join(sharedPath, 'tsconfig.json'),
-    JSON.stringify(getSharedTsConfig(), null, 2),
-    'utf-8'
-  );
-
-  // src/index.ts
-  await fs.writeFile(
-    path.join(sharedPath, 'src', 'index.ts'),
-    `/**
- * 共享工具函数
- */
-
-export function formatDate(date: Date): string {
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-}
-
-export function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-`,
-    'utf-8'
-  );
-}
-
-/**
- * 创建 packages/ui 包 (React 版本)
- */
-export async function createReactUiPackage(projectPath: string): Promise<void> {
-  const uiPath = path.join(projectPath, 'packages', 'ui');
-  await fs.ensureDir(path.join(uiPath, 'src'));
-
-  // package.json
-  await fs.writeFile(
-    path.join(uiPath, 'package.json'),
-    JSON.stringify({
-      name: 'ui',
-      version: '1.0.0',
-      private: true,
-      type: 'module',
-      main: './src/index.ts',
-      types: './src/index.ts',
-      exports: {
-        '.': {
-          types: './src/index.ts',
-          import: './src/index.ts',
-        },
-      },
-      scripts: {
-        build: 'tsc',
-        dev: 'tsc --watch',
-        clean: 'rm -rf dist node_modules',
-      },
-      peerDependencies: {
-        react: '^18.0.0',
-        'react-dom': '^18.0.0',
-      },
-    }, null, 2),
-    'utf-8'
-  );
-
-  // tsconfig.json
-  await fs.writeFile(
-    path.join(uiPath, 'tsconfig.json'),
-    JSON.stringify({
-      compilerOptions: {
-        target: 'ES2022',
-        module: 'ESNext',
-        moduleResolution: 'Node',
-        lib: ['ES2022', 'DOM'],
-        jsx: 'react-jsx',
-        outDir: './dist',
-        rootDir: './src',
-        strict: true,
-        esModuleInterop: true,
-        skipLibCheck: true,
-        forceConsistentCasingInFileNames: true,
-        declaration: true,
-        declarationMap: true,
-        sourceMap: true,
-      },
-      include: ['src/**/*'],
-      exclude: ['node_modules', 'dist'],
-    }, null, 2),
-    'utf-8'
-  );
-
-  // src/index.ts
-  await fs.writeFile(
-    path.join(uiPath, 'src', 'index.ts'),
-    `export { Button } from './Button';
-
-`,
-    'utf-8'
-  );
-
-  // src/Button.tsx
-  await fs.writeFile(
-    path.join(uiPath, 'src', 'Button.tsx'),
-    `import React from 'react';
-
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary';
-}
-
-export function Button({ variant = 'primary', children, style, ...props }: ButtonProps) {
-  const baseStyle: React.CSSProperties = {
-    padding: '0.6em 1.2em',
-    fontSize: '1em',
-    fontWeight: 500,
-    fontFamily: 'inherit',
-    borderRadius: '8px',
-    border: '1px solid transparent',
-    cursor: 'pointer',
-    transition: 'border-color 0.25s',
-    ...(variant === 'primary'
-      ? { backgroundColor: '#646cff', color: '#ffffff' }
-      : { backgroundColor: '#1a1a1a', color: '#ffffff' }),
-    ...style,
-  };
-
-  return (
-    <button style={baseStyle} {...props}>
-      {children}
-    </button>
-  );
-}
-`,
-    'utf-8'
-  );
-}
-
-/**
- * 创建 packages/ui 包 (Vue 版本)
- */
-export async function createVueUiPackage(projectPath: string): Promise<void> {
-  const uiPath = path.join(projectPath, 'packages', 'ui');
-  await fs.ensureDir(path.join(uiPath, 'src', 'components'));
-
-  // package.json
-  await fs.writeFile(
-    path.join(uiPath, 'package.json'),
-    JSON.stringify({
-      name: 'ui',
-      version: '1.0.0',
-      private: true,
-      type: 'module',
-      main: './src/index.ts',
-      types: './src/index.ts',
-      exports: {
-        '.': {
-          types: './src/index.ts',
-          import: './src/index.ts',
-        },
-      },
-      scripts: {
-        build: 'vue-tsc && vite build',
-        dev: 'vite build --watch',
-        clean: 'rm -rf dist node_modules',
-      },
-      peerDependencies: {
-        vue: '^3.0.0',
-      },
-    }, null, 2),
-    'utf-8'
-  );
-
-  // src/index.ts
-  await fs.writeFile(
-    path.join(uiPath, 'src', 'index.ts'),
-    `export { MyButton } from './components/MyButton.vue';
-
-`,
-    'utf-8'
-  );
-
-  // src/components/MyButton.vue
-  await fs.writeFile(
-    path.join(uiPath, 'src', 'components', 'MyButton.vue'),
-    `<script setup lang="ts">
-defineProps<{
-  variant?: 'primary' | 'secondary';
-}>();
-</script>
-
-<template>
-  <button
-    class="my-button"
-    :class="variant || 'primary'"
-  >
-    <slot />
-  </button>
-</template>
-
-<style scoped>
-.my-button {
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-
-.my-button.primary {
-  background-color: #646cff;
-  color: #ffffff;
-}
-
-.my-button.secondary {
-  background-color: #1a1a1a;
-  color: #ffffff;
-}
-</style>
-`,
-    'utf-8'
-  );
-
-  // vite.config.ts
-  await fs.writeFile(
-    path.join(uiPath, 'vite.config.ts'),
-    `import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import { resolve } from 'path';
-
-export default defineConfig({
-  plugins: [vue()],
-  build: {
-    lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
-      name: 'UI',
-      fileName: 'index',
-    },
-    rollupOptions: {
-      external: ['vue'],
-      output: {
-        globals: {
-          vue: 'Vue',
-        },
-      },
-    },
-  },
-});
-`,
-    'utf-8'
-  );
-}
-
 // ============ 项目根目录配置文件生成器 ============
 
 /**
@@ -657,7 +245,8 @@ export default defineConfig({
  */
 export async function createRootConfigFiles(
   projectPath: string,
-  framework: 'react' | 'vue'
+  framework: 'react' | 'vue',
+  bundler: 'vite' | 'webpack' | 'rollup' | 'none' = 'vite'
 ): Promise<void> {
   // .gitignore
   await fs.writeFile(
@@ -683,7 +272,7 @@ export async function createRootConfigFiles(
   // tsconfig.json
   await fs.writeFile(
     path.join(projectPath, 'tsconfig.json'),
-    JSON.stringify(getBaseTsConfig(framework), null, 2),
+    JSON.stringify(getBaseTsConfig(framework, bundler), null, 2),
     'utf-8'
   );
 
@@ -819,7 +408,7 @@ export function getVscodeSettings(context: VscodeConfigContext): string {
  * 获取 VSCode extensions.json 内容
  */
 export function getVscodeExtensions(context: VscodeConfigContext): string {
-  const { projectType, hasStylelint, hasPrettier, hasEslint } = context;
+  const { projectType, hasStylelint } = context;
 
   const extensions: string[] = [
     // 必装扩展

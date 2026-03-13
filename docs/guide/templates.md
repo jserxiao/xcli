@@ -43,7 +43,7 @@ my-project/
 
 - ⚛️ **React 18** - 最新 React 版本
 - 🎯 **React Router 6** - 内置路由配置
-- 📦 **Vite** - 快速开发构建
+- 📦 **打包工具** - 可选 Vite / Webpack
 - 🎨 **样式预处理器** - CSS / Less / Sass
 - 🌐 **浏览器兼容** - Autoprefixer + Legacy 插件
 - 📁 **Monorepo** - pnpm workspace 多包管理
@@ -158,7 +158,7 @@ my-project/
 
 - 💚 **Vue 3** - Composition API
 - 🎯 **Vue Router 4** - 内置路由配置
-- 📦 **Vite** - 快速开发构建
+- 📦 **打包工具** - 可选 Vite / Webpack
 - 🎨 **样式预处理器** - CSS / Less / Sass
 - 📁 **Monorepo** - pnpm workspace 多包管理
 - 🗃️ **Pinia** - Vue 官方状态管理（默认集成）

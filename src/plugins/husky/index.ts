@@ -1,4 +1,5 @@
-import type { Plugin } from '../types/index.js';
+import type { Plugin } from '../../types/index.js';
+import { GIT_VERSIONS } from '../../constants/index.js';
 import path from 'path';
 import fs from 'fs-extra';
 
@@ -9,8 +10,8 @@ export const huskyPlugin: Plugin = {
   category: 'git',
   defaultEnabled: false,
   devDependencies: {
-    husky: '^9.0.0',
-    'lint-staged': '^15.2.0',
+    husky: GIT_VERSIONS.husky,
+    'lint-staged': GIT_VERSIONS['lint-staged'],
   },
   scripts: {
     prepare: 'husky',

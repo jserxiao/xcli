@@ -11,13 +11,32 @@ import {
   createSharedPackage,
   createReactUiPackage,
   getViteEnvDts,
+  // 状态管理模板
+  getReduxStoreIndex,
+  getReduxCounterSlice,
+  getReduxApiSlice,
+  getReduxLoggerMiddleware,
+  getMobXCounterStore,
+  getMobXStoreIndex,
 } from './shared.js';
-import { axiosPlugin, fetchPlugin } from '../plugins/http-client.js';
+import { axiosPlugin, fetchPlugin } from '../plugins/http-client/index.js';
+
+type BundlerType = 'vite' | 'webpack' | 'rollup' | 'none';
+
+/**
+ * 获取打包工具类型
+ */
+function getBundlerType(selectedPlugins: string[]): BundlerType {
+  if (selectedPlugins.includes('vite')) return 'vite';
+  if (selectedPlugins.includes('webpack')) return 'webpack';
+  if (selectedPlugins.includes('rollup')) return 'rollup';
+  return 'none';
+}
 
 /**
  * 创建 Redux store 文件
  */
-async function createReduxStore(projectPath: string) {
+async function createReduxStore(projectPath: string, bundler: 'vite' | 'webpack' | 'rollup' | 'none' = 'vite') {
   const storePath = path.join(projectPath, 'src', 'store');
   await fs.ensureDir(storePath);
   await fs.ensureDir(path.join(storePath, 'middleware'));
@@ -25,191 +44,28 @@ async function createReduxStore(projectPath: string) {
   // store/index.ts
   await fs.writeFile(
     path.join(storePath, 'index.ts'),
-    `import { configureStore } from '@reduxjs/toolkit';
-import { setupListeners } from '@reduxjs/toolkit/query';
-import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import counterReducer from './counterSlice';
-import { apiSlice } from './apiSlice';
-
-export const store = configureStore({
-  reducer: {
-    counter: counterReducer,
-    [apiSlice.reducerPath]: apiSlice.reducer,
-  },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      // thunk 已内置，无需额外配置
-      // 开启不可变状态检查（开发环境）
-      immutableCheck: import.meta.env.DEV,
-      // 开启序列化检查（开发环境）
-      serializableCheck: import.meta.env.DEV,
-    }).concat(apiSlice.middleware), // 添加 RTK Query 中间件
-  // 开启 Redux DevTools（开发环境）
-  devTools: import.meta.env.DEV,
-});
-
-// 设置监听器（用于 RTK Query 缓存失效等）
-setupListeners(store.dispatch);
-
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
-
-// 类型化的 hooks
-export const useAppDispatch = () => useDispatch<AppDispatch>();
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
-`,
+    getReduxStoreIndex(bundler),
     'utf-8'
   );
 
   // store/counterSlice.ts
   await fs.writeFile(
     path.join(storePath, 'counterSlice.ts'),
-    `import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-
-interface CounterState {
-  value: number;
-  loading: boolean;
-  error: string | null;
-}
-
-const initialState: CounterState = {
-  value: 0,
-  loading: false,
-  error: null,
-};
-
-// 使用 thunk 的异步 action（RTK 内置支持）
-export const incrementAsync = createAsyncThunk(
-  'counter/incrementAsync',
-  async (amount: number, { rejectWithValue }) => {
-    try {
-      // 模拟异步操作（如 API 调用）
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return amount;
-    } catch (error) {
-      return rejectWithValue((error as Error).message);
-    }
-  }
-);
-
-export const counterSlice = createSlice({
-  name: 'counter',
-  initialState,
-  reducers: {
-    increment: (state) => {
-      state.value += 1;
-    },
-    decrement: (state) => {
-      state.value -= 1;
-    },
-    incrementByAmount: (state, action: PayloadAction<number>) => {
-      state.value += action.payload;
-    },
-    reset: (state) => {
-      state.value = 0;
-      state.error = null;
-    },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(incrementAsync.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(incrementAsync.fulfilled, (state, action) => {
-        state.loading = false;
-        state.value += action.payload;
-      })
-      .addCase(incrementAsync.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      });
-  },
-});
-
-export const { increment, decrement, incrementByAmount, reset } = counterSlice.actions;
-export default counterSlice.reducer;
-`,
+    getReduxCounterSlice(),
     'utf-8'
   );
 
-  // store/apiSlice.ts（RTK Query 数据请求中间件）
+  // store/apiSlice.ts
   await fs.writeFile(
     path.join(storePath, 'apiSlice.ts'),
-    `import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-
-// 定义 API 响应类型
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-}
-
-// 创建 RTK Query API slice
-export const apiSlice = createApi({
-  reducerPath: 'api',
-  baseQuery: fetchBaseQuery({ 
-    baseUrl: '/api',
-    // 可配置请求拦截器
-    prepareHeaders: (headers) => {
-      // 添加认证 token 等
-      // const token = localStorage.getItem('token');
-      // if (token) headers.set('Authorization', \`Bearer \${token}\`);
-      return headers;
-    },
-  }),
-  tagTypes: ['User'], // 缓存标签，用于自动刷新
-  endpoints: (builder) => ({
-    // 查询用户列表
-    getUsers: builder.query<User[], void>({
-      query: () => '/users',
-      providesTags: ['User'],
-    }),
-    // 查询单个用户
-    getUser: builder.query<User, number>({
-      query: (id) => \`/users/\${id}\`,
-    }),
-    // 创建用户
-    createUser: builder.mutation<User, Partial<User>>({
-      query: (user) => ({
-        url: '/users',
-        method: 'POST',
-        body: user,
-      }),
-      invalidatesTags: ['User'], // 创建后自动刷新列表
-    }),
-  }),
-});
-
-// 自动生成的 hooks
-export const { useGetUsersQuery, useGetUserQuery, useCreateUserMutation } = apiSlice;
-`,
+    getReduxApiSlice(),
     'utf-8'
   );
 
-  // store/middleware/logger.ts（开发环境日志中间件）
+  // store/middleware/logger.ts
   await fs.writeFile(
     path.join(storePath, 'middleware', 'logger.ts'),
-    `import type { Middleware } from '@reduxjs/toolkit';
-
-/**
- * 开发环境日志中间件
- * 生产环境建议使用 Redux DevTools 扩展
- */
-export const loggerMiddleware: Middleware = (store) => (next) => (action) => {
-  if (import.meta.env.DEV) {
-    const actionType = (action as { type: string }).type;
-    console.group(\`%c Action: \${actionType}\`, 'color: #9E9E9E; font-weight: bold');
-    console.log('%c Previous State:', 'color: #9E9E9E', store.getState());
-    console.log('%c Action:', 'color: #03A9F4', action);
-    const result = next(action);
-    console.log('%c Next State:', 'color: #4CAF50', store.getState());
-    console.groupEnd();
-    return result;
-  }
-  return next(action);
-};
-`,
+    getReduxLoggerMiddleware(bundler),
     'utf-8'
   );
 }
@@ -224,91 +80,114 @@ async function createMobXStore(projectPath: string) {
   // store/CounterStore.ts
   await fs.writeFile(
     path.join(storePath, 'CounterStore.ts'),
-    `import { makeAutoObservable } from 'mobx';
-
-class CounterStore {
-  count = 0;
-
-  constructor() {
-    makeAutoObservable(this);
-  }
-
-  increment() {
-    this.count += 1;
-  }
-
-  decrement() {
-    this.count -= 1;
-  }
-
-  incrementByAmount(amount: number) {
-    this.count += amount;
-  }
-}
-
-export const counterStore = new CounterStore();
-`,
+    getMobXCounterStore(),
     'utf-8'
   );
 
   // store/index.ts
   await fs.writeFile(
     path.join(storePath, 'index.ts'),
-    `export { counterStore } from './CounterStore';
-`,
+    getMobXStoreIndex(),
     'utf-8'
   );
 }
 
 /**
- * React + Vite 项目模板 (pnpm monorepo)
+ * React 项目模板 (pnpm monorepo)
  */
 export const reactTemplate = {
   type: 'react' as ProjectType,
   displayName: 'React',
-  description: 'React + Vite 前端项目 (pnpm monorepo)',
+  description: 'React 前端项目 (pnpm monorepo)',
 
   createStructure: async (projectPath: string, context: PluginContext) => {
-    const { styleType = 'css', stateManager = 'none', httpClient = 'axios' } = context;
+    const { styleType = 'css', stateManager = 'none', httpClient = 'axios', bundler = 'vite', selectedPlugins = [] } = context;
     const styleExt = getStyleExt(styleType);
 
     // ============ 根目录文件 ============
 
+    // 根据打包工具生成不同的 package.json
+    const basePackageJson: Record<string, any> = {
+      name: context.projectName,
+      version: '1.0.0',
+      private: true,
+      description: context.options.description || '',
+      author: context.options.author || '',
+      license: 'MIT',
+      type: 'module',
+      dependencies: {
+        shared: 'workspace:*',
+        ui: 'workspace:*',
+      },
+    };
+
+    // 根据打包工具设置不同的 scripts 和 devDependencies
+    if (bundler === 'vite') {
+      basePackageJson.scripts = {
+        dev: 'vite',
+        build: 'tsc && vite build',
+        preview: 'vite preview',
+        lint: 'eslint src --ext .ts,.tsx',
+        'lint:fix': 'eslint src --ext .ts,.tsx --fix',
+        format: 'prettier --write "src/**/*.{ts,tsx,css,scss,less}"',
+        clean: 'rm -rf dist node_modules',
+      };
+      basePackageJson.devDependencies = {
+        '@vitejs/plugin-legacy': '^5.3.0',
+        '@vitejs/plugin-react': '^4.2.1',
+        autoprefixer: '^10.4.17',
+      };
+    } else if (bundler === 'webpack') {
+      basePackageJson.scripts = {
+        dev: 'webpack serve --mode development',
+        build: 'webpack --mode production',
+        lint: 'eslint src --ext .ts,.tsx',
+        'lint:fix': 'eslint src --ext .ts,.tsx --fix',
+        format: 'prettier --write "src/**/*.{ts,tsx,css,scss,less}"',
+        clean: 'rm -rf dist node_modules',
+      };
+      basePackageJson.devDependencies = {
+        webpack: '^5.98.0',
+        'webpack-cli': '^6.0.1',
+        'webpack-dev-server': '^5.2.3',
+        'html-webpack-plugin': '^5.6.0',
+        'ts-loader': '^9.5.1',
+        'css-loader': '^7.1.2',
+        'style-loader': '^4.0.0',
+        'mini-css-extract-plugin': '^2.9.2',
+        autoprefixer: '^10.4.21',
+        'postcss-loader': '^8.1.1',
+        // React 热更新
+        '@pmmmwh/react-refresh-webpack-plugin': '^0.5.15',
+        'react-refresh': '^0.17.0',
+      };
+    } else {
+      // 默认使用 vite 或无打包工具
+      basePackageJson.scripts = {
+        dev: 'vite',
+        build: 'tsc && vite build',
+        preview: 'vite preview',
+        lint: 'eslint src --ext .ts,.tsx',
+        'lint:fix': 'eslint src --ext .ts,.tsx --fix',
+        format: 'prettier --write "src/**/*.{ts,tsx,css,scss,less}"',
+        clean: 'rm -rf dist node_modules',
+      };
+      basePackageJson.devDependencies = {
+        '@vitejs/plugin-legacy': '^5.3.0',
+        '@vitejs/plugin-react': '^4.2.1',
+        autoprefixer: '^10.4.17',
+      };
+    }
+
     // 创建根目录 package.json
     await fs.writeFile(
       path.join(projectPath, 'package.json'),
-      JSON.stringify({
-        name: context.projectName,
-        version: '1.0.0',
-        private: true,
-        description: context.options.description || '',
-        author: context.options.author || '',
-        license: 'MIT',
-        type: 'module',
-        scripts: {
-          dev: 'vite',
-          build: 'tsc && vite build',
-          preview: 'vite preview',
-          lint: 'eslint src --ext .ts,.tsx',
-          'lint:fix': 'eslint src --ext .ts,.tsx --fix',
-          format: 'prettier --write "src/**/*.{ts,tsx,css,scss,less}"',
-          clean: 'rm -rf dist node_modules',
-        },
-        dependencies: {
-          shared: 'workspace:*',
-          ui: 'workspace:*',
-        },
-        devDependencies: {
-          '@vitejs/plugin-legacy': '^5.3.0',
-          '@vitejs/plugin-react': '^4.2.1',
-          autoprefixer: '^10.4.17',
-        },
-      }, null, 2),
+      JSON.stringify(basePackageJson, null, 2),
       'utf-8'
     );
 
     // 创建通用配置文件
-    await createRootConfigFiles(projectPath, 'react');
+    await createRootConfigFiles(projectPath, 'react', bundler);
 
     // ============ src 目录 (主应用源代码) ============
     await createSrcDirectories(projectPath);
@@ -316,7 +195,7 @@ export const reactTemplate = {
 
     // 创建状态管理相关文件
     if (stateManager === 'redux') {
-      await createReduxStore(projectPath);
+      await createReduxStore(projectPath, bundler);
     } else if (stateManager === 'mobx') {
       await createMobXStore(projectPath);
     }
@@ -610,17 +489,19 @@ export default About;
       'utf-8'
     );
 
-    // src/vite-env.d.ts
-    await fs.writeFile(
-      path.join(projectPath, 'src', 'vite-env.d.ts'),
-      getViteEnvDts('react'),
-      'utf-8'
-    );
+    // 根据打包工具生成配置文件
+    if (bundler === 'vite') {
+      // src/vite-env.d.ts
+      await fs.writeFile(
+        path.join(projectPath, 'src', 'vite-env.d.ts'),
+        getViteEnvDts('react'),
+        'utf-8'
+      );
 
-    // vite.config.ts
-    await fs.writeFile(
-      path.join(projectPath, 'vite.config.ts'),
-      `import { defineConfig } from 'vite';
+      // vite.config.ts
+      await fs.writeFile(
+        path.join(projectPath, 'vite.config.ts'),
+        `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';
 import autoprefixer from 'autoprefixer';
@@ -647,8 +528,19 @@ export default defineConfig({
   },
 });
 `,
-      'utf-8'
-    );
+        'utf-8'
+      );
+    } else if (bundler === 'webpack') {
+      // webpack.config.cjs for React
+      const { createWebpackPlugin } = await import('../plugins/webpack/index.js');
+      const webpackPluginInstance = createWebpackPlugin('react', styleType);
+      const webpackConfig = webpackPluginInstance.files![0].content;
+      await fs.writeFile(
+        path.join(projectPath, 'webpack.config.cjs'),
+        typeof webpackConfig === 'function' ? webpackConfig(context) : webpackConfig,
+        'utf-8'
+      );
+    }
 
     // ============ packages 目录 (monorepo 其他包) ============
     await fs.ensureDir(path.join(projectPath, 'packages'));
@@ -660,7 +552,7 @@ export default defineConfig({
     await createReactUiPackage(projectPath);
   },
 
-  getDependencies: (styleType: StyleType = 'css', stateManager: StateManagerType = 'none', httpClient: HttpClientType = 'axios') => {
+  getDependencies: (styleType: StyleType = 'css', stateManager: StateManagerType = 'none', httpClient: HttpClientType = 'axios', bundler: BundlerType = 'vite') => {
     const deps: {
       dependencies: Record<string, string>;
       devDependencies: Record<string, string>;
@@ -676,14 +568,31 @@ export default defineConfig({
       devDependencies: {
         '@types/react': '^18.2.48',
         '@types/react-dom': '^18.2.18',
-        // Vite 相关依赖
-        vite: '^5.0.0',
-        '@vitejs/plugin-react': '^4.2.1',
-        '@vitejs/plugin-legacy': '^5.3.0',
         typescript: '^5.3.3',
-        autoprefixer: '^10.4.17',
       },
     };
+
+    // 打包工具相关依赖
+    if (bundler === 'vite') {
+      deps.devDependencies['vite'] = '^5.0.0';
+      deps.devDependencies['@vitejs/plugin-react'] = '^4.2.1';
+      deps.devDependencies['@vitejs/plugin-legacy'] = '^5.3.0';
+      deps.devDependencies['autoprefixer'] = '^10.4.17';
+    } else if (bundler === 'webpack') {
+      deps.devDependencies['webpack'] = '^5.98.0';
+      deps.devDependencies['webpack-cli'] = '^6.0.1';
+      deps.devDependencies['webpack-dev-server'] = '^5.2.3';
+      deps.devDependencies['html-webpack-plugin'] = '^5.6.0';
+      deps.devDependencies['ts-loader'] = '^9.5.1';
+      deps.devDependencies['css-loader'] = '^7.1.2';
+      deps.devDependencies['style-loader'] = '^4.0.0';
+      deps.devDependencies['mini-css-extract-plugin'] = '^2.9.2';
+      deps.devDependencies['autoprefixer'] = '^10.4.21';
+      deps.devDependencies['postcss-loader'] = '^8.1.1';
+      // React 热更新
+      deps.devDependencies['@pmmmwh/react-refresh-webpack-plugin'] = '^0.5.15';
+      deps.devDependencies['react-refresh'] = '^0.17.0';
+    }
 
     // 状态管理依赖
     if (stateManager === 'redux') {
@@ -701,16 +610,31 @@ export default defineConfig({
 
     if (styleType === 'less') {
       deps.devDependencies['less'] = '^4.2.0';
+      if (bundler === 'webpack') {
+        deps.devDependencies['less-loader'] = '^12.2.0';
+      }
     } else if (styleType === 'scss') {
       deps.devDependencies['sass'] = '^1.70.0';
+      if (bundler === 'webpack') {
+        deps.devDependencies['sass-loader'] = '^14.1.0';
+      }
     }
 
     return deps;
   },
 
-  getScripts: () => ({
-    dev: 'vite',
-    build: 'tsc && vite build',
-    preview: 'vite preview',
-  }),
+  getScripts: (bundler: BundlerType = 'vite'): Record<string, string> => {
+    if (bundler === 'webpack') {
+      return {
+        dev: 'webpack serve --mode development',
+        build: 'webpack --mode production',
+        typecheck: 'tsc --noEmit',
+      };
+    }
+    return {
+      dev: 'vite',
+      build: 'tsc && vite build',
+      preview: 'vite preview',
+    };
+  },
 };

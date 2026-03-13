@@ -76,6 +76,7 @@ xcli i my-project -t react -s scss -m redux -p pnpm -d
 | `--style <type>` | `-s` | 样式预处理器：`css` / `less` / `scss` |
 | `--state-manager <type>` | `-m` | 状态管理：`none` / `redux` / `mobx` / `pinia` |
 | `--http-client <type>` | `-h` | HTTP 请求库：`axios` / `fetch` / `none` |
+| `--bundler <type>` | `-b` | 打包工具：`vite` / `webpack`（仅 React/Vue，默认 vite） |
 | `--package-manager <name>` | `-p` | 包管理器：`pnpm` / `npm` / `yarn` |
 | `--skip-install` | `-si` | 跳过依赖安装 |
 | `--skip-git` | `-sg` | 跳过 Git 初始化 |

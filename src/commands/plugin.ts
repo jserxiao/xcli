@@ -59,7 +59,7 @@ export async function addPlugin(pluginNames: string[]): Promise<void> {
   // 如果添加 stylelint，根据样式类型动态修改依赖
   const hasStylelint = pluginsToAdd.some(p => p.name === 'stylelint');
   if (hasStylelint) {
-    const { createStylelintPlugin } = await import('../plugins/stylelint.js');
+    const { createStylelintPlugin } = await import('../plugins/stylelint/index.js');
     const stylelintPluginInstance = createStylelintPlugin(detectedStyleType);
     pluginsToAdd = pluginsToAdd.map(p => 
       p.name === 'stylelint' ? stylelintPluginInstance : p
@@ -74,6 +74,7 @@ export async function addPlugin(pluginNames: string[]): Promise<void> {
     styleType: detectedStyleType, // 使用检测到的样式类型
     stateManager: 'none', // 插件管理默认不使用状态管理
     httpClient: 'none', // 插件管理默认不使用 HTTP 请求库
+    bundler: 'none', // 插件管理默认不使用打包工具
     selectedPlugins: selectedPlugins,
     useTypeScript: true,
     packageManager: 'npm',

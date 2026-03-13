@@ -24,6 +24,7 @@ xcli i [projectName] [options]
 | `--style <type>` | `-s` | `less` | 样式预处理器 |
 | `--state-manager <type>` | `-m` | - | 状态管理方案 |
 | `--http-client <type>` | `-h` | `axios` | HTTP 请求库 |
+| `--bundler <type>` | `-b` | `vite` | 打包工具（仅 React/Vue） |
 | `--package-manager <name>` | `-p` | `pnpm` | 包管理器 |
 | `--skip-install` | `-si` | `false` | 跳过依赖安装 |
 | `--skip-git` | `-sg` | `false` | 跳过 Git 初始化 |
@@ -78,6 +79,7 @@ xcli i my-project \
   -t react \
   -s scss \
   -m redux \
+  -b webpack \
   -p pnpm \
   -sg \
   -si
@@ -135,7 +137,7 @@ xcli i my-app -t react -s scss -d
 包含：
 - React 18 + TypeScript
 - React Router 6
-- Vite 构建工具
+- Vite 或 Webpack 构建工具（可选）
 - pnpm monorepo 结构
 - 可选状态管理（Redux / MobX）
 
@@ -150,7 +152,7 @@ xcli i my-app -t vue -s less -d
 包含：
 - Vue 3 + TypeScript
 - Vue Router 4
-- Vite 构建工具
+- Vite 或 Webpack 构建工具（可选）
 - pnpm monorepo 结构
 - Pinia 状态管理（默认集成）
 
@@ -213,6 +215,39 @@ xcli i my-app -t react --http-client fetch -d
 # 不使用 HTTP 请求库
 xcli i my-app -t react -h none -d
 ```
+
+## 打包工具
+
+React/Vue 项目可选择打包工具：
+
+| 选项 | 说明 |
+|------|------|
+| `vite` | 下一代前端构建工具，极速开发体验（默认） |
+| `webpack` | 功能强大的模块打包工具 |
+
+### Vite 特性
+
+- ⚡ **极速冷启动** - 利用原生 ES 模块，无需打包
+- 🔥 **即时热更新** - 模块热替换 (HMR)
+- 📦 **优化的构建** - 基于 Rollup 的生产构建
+- 🌐 **浏览器兼容** - Legacy 插件支持老旧浏览器
+
+### Webpack 特性
+
+- 🔥 **热模块替换 (HMR)** - 开发时实时更新
+- 📦 **代码分割** - 自动拆分代码优化加载
+- 🎨 **CSS 提取** - 独立 CSS 文件，优化加载
+- 📊 **打包分析** - 支持 Bundle Analyzer
+
+```bash
+# 使用 Vite（默认）
+xcli i my-app -t react -d
+
+# 使用 Webpack
+xcli i my-app -t react -b webpack -d
+```
+
+---
 
 ## 样式预处理器
 

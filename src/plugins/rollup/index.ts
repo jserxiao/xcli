@@ -1,4 +1,5 @@
-import type { Plugin } from '../types/index.js';
+import type { Plugin } from '../../types/index.js';
+import { BUNDLER_VERSIONS } from '../../constants/index.js';
 
 export const rollupPlugin: Plugin = {
   name: 'rollup',
@@ -7,10 +8,10 @@ export const rollupPlugin: Plugin = {
   category: 'bundler',
   defaultEnabled: false,
   devDependencies: {
-    rollup: '^4.9.6',
-    '@rollup/plugin-typescript': '^11.1.6',
-    '@rollup/plugin-node-resolve': '^15.2.3',
-    '@rollup/plugin-commonjs': '^25.0.7',
+    rollup: BUNDLER_VERSIONS.rollup,
+    '@rollup/plugin-typescript': BUNDLER_VERSIONS['@rollup/plugin-typescript'],
+    '@rollup/plugin-node-resolve': BUNDLER_VERSIONS['@rollup/plugin-node-resolve'],
+    '@rollup/plugin-commonjs': BUNDLER_VERSIONS['@rollup/plugin-commonjs'],
     tslib: '^2.6.2',
   },
   scripts: {

@@ -2,6 +2,8 @@ import type { ProjectType, PluginContext, StyleType, StateManagerType, HttpClien
 import path from 'path';
 import fs from 'fs-extra';
 
+type BundlerType = 'vite' | 'webpack' | 'rollup' | 'none';
+
 /**
  * 模板生成器接口
  */
@@ -13,9 +15,10 @@ export interface TemplateGenerator {
   getDependencies: (
     styleType?: StyleType,
     stateManager?: StateManagerType,
-    httpClient?: HttpClientType
+    httpClient?: HttpClientType,
+    bundler?: BundlerType
   ) => { dependencies: Record<string, string>; devDependencies: Record<string, string> };
-  getScripts: () => Record<string, string>;
+  getScripts: (bundler?: BundlerType) => Record<string, string>;
 }
 
 /**
@@ -55,7 +58,7 @@ export default {
     devDependencies: {},
   }),
 
-  getScripts: () => ({
+  getScripts: (_bundler?: BundlerType) => ({
     build: 'tsc',
     start: 'node dist/index.js',
   }),

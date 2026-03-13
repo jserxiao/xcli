@@ -1,9 +1,11 @@
-import type { Plugin, PluginContext } from '../types/index.js';
-
 /**
- * 获取 Axios 封装配置
+ * Axios 封装配置
  */
-function getAxiosConfig(context: PluginContext) {
+export function getAxiosConfig(bundler: 'vite' | 'webpack' | 'rollup' | 'none' = 'vite'): string {
+  const baseUrl = bundler === 'vite' 
+    ? 'import.meta.env.VITE_API_BASE_URL || \'/api\'' 
+    : 'process.env.VITE_API_BASE_URL || \'/api\'';
+
   return `import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 
 /**
@@ -11,7 +13,7 @@ function getAxiosConfig(context: PluginContext) {
  */
 const createAxiosInstance = (config?: AxiosRequestConfig): AxiosInstance => {
   const instance = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+    baseURL: ${baseUrl},
     timeout: 10000,
     headers: {
       'Content-Type': 'application/json',
@@ -73,9 +75,13 @@ export default request;
 }
 
 /**
- * 获取 Fetch 封装配置
+ * Fetch 封装配置
  */
-function getFetchConfig(context: PluginContext) {
+export function getFetchConfig(bundler: 'vite' | 'webpack' | 'rollup' | 'none' = 'vite'): string {
+  const baseUrl = bundler === 'vite' 
+    ? 'import.meta.env.VITE_API_BASE_URL || \'/api\'' 
+    : 'process.env.VITE_API_BASE_URL || \'/api\'';
+
   return `/**
  * Fetch 请求封装
  */
@@ -85,17 +91,17 @@ interface RequestConfig extends RequestInit {
   timeout?: number;
 }
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const BASE_URL = ${baseUrl};
 
 /**
  * 创建带超时的 fetch
  */
 const fetchWithTimeout = async (url: string, config: RequestConfig = {}): Promise<Response> => {
   const { timeout = 10000, ...fetchConfig } = config;
-  
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
-  
+
   try {
     const response = await fetch(url, {
       ...fetchConfig,
@@ -115,7 +121,7 @@ const request = async <T = any>(
   config: RequestConfig = {}
 ): Promise<T> => {
   const { params, ...fetchConfig } = config;
-  
+
   // 构建完整 URL
   let fullUrl = \`\${BASE_URL}\${url}\`;
   if (params) {
@@ -177,52 +183,4 @@ export const http = {
 
 export default request;
 `;
-}
-
-/**
- * Axios 插件
- */
-export const axiosPlugin: Plugin = {
-  name: 'axios',
-  displayName: 'Axios',
-  description: '添加 Axios HTTP 请求库封装',
-  category: 'other',
-  defaultEnabled: false,
-  dependencies: {
-    axios: '^1.6.0',
-  },
-  files: [
-    {
-      path: 'src/api/request.ts',
-      content: (context: PluginContext) => getAxiosConfig(context),
-    },
-  ],
-};
-
-/**
- * Fetch 插件（原生 fetch 封装）
- */
-export const fetchPlugin: Plugin = {
-  name: 'fetch',
-  displayName: 'Fetch',
-  description: '添加原生 Fetch API 封装（无需额外依赖）',
-  category: 'other',
-  defaultEnabled: false,
-  files: [
-    {
-      path: 'src/api/request.ts',
-      content: (context: PluginContext) => getFetchConfig(context),
-    },
-  ],
-};
-
-/**
- * 获取 HTTP 客户端选项列表
- */
-export function getHttpClientChoices() {
-  return [
-    { name: 'Axios - 功能丰富的 HTTP 客户端（推荐）', value: 'axios' },
-    { name: 'Fetch - 原生 API 封装（轻量无依赖）', value: 'fetch' },
-    { name: '无 - 不使用 HTTP 请求库', value: 'none' },
-  ];
 }

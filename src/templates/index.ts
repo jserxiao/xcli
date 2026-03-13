@@ -4,6 +4,18 @@ import { libraryTemplate } from './library.js';
 import { reactTemplate } from './react.js';
 import { vueTemplate } from './vue.js';
 
+type BundlerType = 'vite' | 'webpack' | 'rollup' | 'none';
+
+/**
+ * 获取打包工具类型
+ */
+function getBundlerType(selectedPlugins: string[]): BundlerType {
+  if (selectedPlugins.includes('vite')) return 'vite';
+  if (selectedPlugins.includes('webpack')) return 'webpack';
+  if (selectedPlugins.includes('rollup')) return 'rollup';
+  return 'none';
+}
+
 /**
  * 所有可用模板
  */
@@ -95,19 +107,22 @@ export function getProjectDependencies(
   projectType: ProjectType,
   styleType: StyleType = 'less',
   stateManager: StateManagerType = 'none',
-  httpClient: HttpClientType = 'axios'
+  httpClient: HttpClientType = 'axios',
+  selectedPlugins: string[] = []
 ) {
   const template = getTemplate(projectType);
   if (!template) {
     return { dependencies: {}, devDependencies: {} };
   }
 
+  const bundler = getBundlerType(selectedPlugins);
+
   // 如果模板支持样式和状态管理参数
   if (projectType === 'react') {
-    return reactTemplate.getDependencies(styleType, stateManager, httpClient);
+    return reactTemplate.getDependencies(styleType, stateManager, httpClient, bundler);
   }
   if (projectType === 'vue') {
-    return vueTemplate.getDependencies(styleType, stateManager, httpClient);
+    return vueTemplate.getDependencies(styleType, stateManager, httpClient, bundler);
   }
 
   return template.getDependencies();
@@ -116,10 +131,17 @@ export function getProjectDependencies(
 /**
  * 获取项目的脚本
  */
-export function getProjectScripts(projectType: ProjectType) {
+export function getProjectScripts(projectType: ProjectType, selectedPlugins: string[] = []) {
   const template = getTemplate(projectType);
   if (!template) {
     return {};
+  }
+
+  const bundler = getBundlerType(selectedPlugins);
+
+  // React/Vue 模板支持打包工具参数
+  if (projectType === 'react' || projectType === 'vue') {
+    return template.getScripts(bundler);
   }
 
   return template.getScripts();
