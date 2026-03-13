@@ -1,6 +1,6 @@
 {
   "name": "@jserxiao/xcli",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "A pluggable CLI tool for scaffolding TypeScript projects",
   "type": "module",
   "main": "dist/index.js",
