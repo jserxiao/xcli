@@ -81,7 +81,10 @@ export async function createProjectStructure(
   await template.createStructure(projectPath, context);
 
   // 创建基础文件（.gitignore 和 README.md）
-  await createBaseFiles(projectPath, context.projectName, projectType);
+  await createBaseFiles(projectPath, context.projectName, projectType, {
+    styleType: context.styleType,
+    stateManager: context.stateManager,
+  });
 }
 
 /**
@@ -89,7 +92,7 @@ export async function createProjectStructure(
  */
 export function getProjectDependencies(
   projectType: ProjectType,
-  styleType: StyleType = 'css',
+  styleType: StyleType = 'less',
   stateManager: StateManagerType = 'none'
 ) {
   const template = getTemplate(projectType);

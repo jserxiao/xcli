@@ -262,6 +262,22 @@ export function getPnpmWorkspaceYaml(): string {
 }
 
 /**
+ * 获取 .npmrc 内容（pnpm 配置）
+ */
+export function getNpmrc(): string {
+  return `# pnpm 配置
+auto-install-peers=true
+strict-peer-dependencies=false
+
+# 仅允许特定包运行 build 脚本（消除 pnpm warning）
+# pnpm 10+ 需要显式批准依赖的 postinstall 脚本
+# 方式1: 运行 pnpm approve-builds 交互式批准
+# 方式2: 使用 ignore-dep-scripts 完全忽略（不推荐生产环境）
+ignore-dep-scripts=true
+`;
+}
+
+/**
  * 获取 vite-env.d.ts 内容
  * @param framework 框架类型
  */
@@ -554,7 +570,7 @@ export async function createVueUiPackage(projectPath: string): Promise<void> {
   // src/index.ts
   await fs.writeFile(
     path.join(uiPath, 'src', 'index.ts'),
-    `export { default as MyButton } from './components/MyButton.vue';
+    `export { MyButton } from './components/MyButton.vue';
 
 `,
     'utf-8'
@@ -683,6 +699,13 @@ export async function createRootConfigFiles(
   await fs.writeFile(
     path.join(projectPath, 'pnpm-workspace.yaml'),
     getPnpmWorkspaceYaml(),
+    'utf-8'
+  );
+
+  // .npmrc
+  await fs.writeFile(
+    path.join(projectPath, '.npmrc'),
+    getNpmrc(),
     'utf-8'
   );
 }

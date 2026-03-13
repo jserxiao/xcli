@@ -52,7 +52,6 @@
 ### 3. 开发体验增强
 | 功能 | 说明 | 优先级 | 状态 |
 |------|------|--------|------|
-| **状态管理选项** | Redux / Zustand / Pinia / Vuex | ⭐⭐⭐ | 待开发 |
 | **UI 组件库选项** | Ant Design / Element Plus / TailwindCSS | ⭐⭐⭐ | 待开发 |
 | **HTTP 请求库选项** | Axios / Fetch 封装 | ⭐⭐ | 待开发 |
 | **环境变量配置** | .env 文件模板 | ⭐⭐ | 待开发 |

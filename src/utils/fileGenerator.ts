@@ -60,7 +60,8 @@ export class FileGenerator {
 export async function createBaseFiles(
   projectPath: string,
   projectName: string,
-  projectType: string
+  projectType: string,
+  context?: { styleType?: string; stateManager?: string }
 ): Promise<void> {
   // 使用共享的 gitignore 内容（但保留 library 项目的简化版）
   const isLibrary = projectType === 'library';
@@ -113,34 +114,341 @@ coverage/
   // 根据 projectType 生成不同的 README
   let readmeContent = `# ${projectName}\n\n`;
 
-  if (projectType === 'react' || projectType === 'vue') {
-    readmeContent += `## 开发
+  if (projectType === 'react') {
+    const styleExt = context?.styleType === 'scss' ? 'scss' : context?.styleType === 'less' ? 'less' : 'css';
+    const stateManagerName = context?.stateManager === 'redux' ? 'Redux Toolkit' : 
+                             context?.stateManager === 'mobx' ? 'MobX' : null;
+    
+    readmeContent += `一个基于 React 18 + TypeScript + Vite 构建的现代化前端项目。
 
-\`\`\`bash
-npm install
-npm run dev
+## 技术栈
+
+| 类别 | 技术 |
+|------|------|
+| 框架 | React 18 |
+| 语言 | TypeScript 5 |
+| 构建 | Vite 5 |
+| 路由 | React Router 6 |
+| 样式 | ${styleExt.toUpperCase()}${styleExt !== 'css' ? ' (CSS 预处理器)' : ''} |
+| 代码规范 | ESLint 9 + Prettier |
+| 包管理 | pnpm (Monorepo) |
+${stateManagerName ? `| 状态管理 | ${stateManagerName} |` : ''}
+
+## 目录结构
+
+\`\`\`
+${projectName}/
+├── src/                    # 主应用源码
+│   ├── components/         # 通用组件
+│   │   └── Layout/         # 布局组件
+│   ├── pages/              # 页面组件
+│   │   ├── Home.tsx        # 首页
+│   │   └── About.tsx       # 关于页
+│   ├── hooks/              # 自定义 Hooks
+│   ├── store/              # Redux 状态管理${context?.stateManager === 'redux' ? `
+│   │   ├── index.ts        # Store 配置
+│   │   ├── counterSlice.ts # 示例 Slice
+│   │   ├── apiSlice.ts     # RTK Query API
+│   │   └── middleware/     # 中间件` : ''}
+│   ├── utils/              # 工具函数
+│   ├── types/              # TypeScript 类型定义
+│   ├── App.tsx             # 根组件
+│   ├── main.tsx            # 入口文件
+│   └── vite-env.d.ts       # Vite 类型声明
+├── packages/               # Monorepo 子包
+│   ├── shared/             # 共享工具库
+│   │   └── src/
+│   │       └── index.ts    # 工具函数导出
+│   └── ui/                 # UI 组件库
+│       └── src/
+│           ├── index.ts    # 组件导出
+│           └── components/ # UI 组件
+├── public/                 # 静态资源
+├── index.html              # HTML 模板
+├── vite.config.ts          # Vite 配置
+├── tsconfig.json           # TypeScript 配置
+├── eslint.config.js        # ESLint 配置 (Flat Config)
+├── pnpm-workspace.yaml     # pnpm 工作区配置
+└── package.json
+\`\`\`${context?.stateManager === 'redux' ? `
+
+## Redux Toolkit 使用
+
+本项目使用 Redux Toolkit 进行状态管理，内置以下功能：
+
+### 类型安全的 Hooks
+
+\`\`\`typescript
+import { useAppDispatch, useAppSelector } from './store';
+
+// 使用 dispatch
+const dispatch = useAppDispatch();
+
+// 使用 selector（自动类型推断）
+const count = useAppSelector((state) => state.counter.value);
 \`\`\`
 
-## 构建
+### 异步 Action (Thunk)
 
-\`\`\`bash
-npm run build
+\`\`\`typescript
+import { createAsyncThunk } from '@reduxjs/toolkit';
+
+export const fetchData = createAsyncThunk(
+  'data/fetch',
+  async (id: string) => {
+    const response = await fetch(\`/api/data/\${id}\`);
+    return response.json();
+  }
+);
 \`\`\`
 
-## 预览
+### RTK Query 数据请求
+
+\`\`\`typescript
+import { useGetUsersQuery, useCreateUserMutation } from './store/apiSlice';
+
+function UserList() {
+  const { data, isLoading, error } = useGetUsersQuery();
+  const [createUser] = useCreateUserMutation();
+  
+  // 自动缓存、去重、刷新
+}
+\`\`\`
+` : ''}
+
+## 快速开始
+
+### 安装依赖
 
 \`\`\`bash
-npm run preview
+pnpm install
 \`\`\`
+
+### 开发
+
+\`\`\`bash
+pnpm dev
+\`\`\`
+
+访问 http://localhost:3000 查看应用。
+
+### 构建
+
+\`\`\`bash
+pnpm build
+\`\`\`
+
+### 预览构建结果
+
+\`\`\`bash
+pnpm preview
+\`\`\`
+
+### 代码检查
+
+\`\`\`bash
+# 检查代码规范
+pnpm lint
+
+# 自动修复
+pnpm lint:fix
+\`\`\`
+
+## Monorepo 使用
+
+本项目采用 pnpm workspace 管理 monorepo 结构。
+
+### 引用内部包
+
+\`\`\`typescript
+// 使用 shared 包的工具函数
+import { formatDate, sleep } from 'shared';
+
+// 使用 ui 包的组件
+import { Button } from 'ui';
+\`\`\`
+
+### 添加新包
+
+1. 在 \`packages/\` 目录下创建新包
+2. 在根目录 \`pnpm-workspace.yaml\` 已配置自动识别
+3. 在主应用 \`package.json\` 中添加依赖：\`"包名": "workspace:*"\`
+
+## 扩展命令
+
+| 命令 | 说明 |
+|------|------|
+| \`pnpm dev\` | 启动开发服务器 |
+| \`pnpm build\` | 构建生产版本 |
+| \`pnpm preview\` | 预览构建结果 |
+| \`pnpm lint\` | 代码检查 |
+| \`pnpm lint:fix\` | 自动修复代码问题 |
+| \`pnpm format\` | 格式化代码 |
+| \`pnpm type-check\` | TypeScript 类型检查 |
+`;
+  } else if (projectType === 'vue') {
+    const styleExt = context?.styleType === 'scss' ? 'scss' : context?.styleType === 'less' ? 'less' : 'css';
+    const hasPinia = context?.stateManager !== 'none';
+    
+    readmeContent += `一个基于 Vue 3 + TypeScript + Vite 构建的现代化前端项目。
+
+## 技术栈
+
+| 类别 | 技术 |
+|------|------|
+| 框架 | Vue 3 |
+| 语言 | TypeScript 5 |
+| 构建 | Vite 5 |
+| 路由 | Vue Router 4 |
+| 样式 | ${styleExt.toUpperCase()}${styleExt !== 'css' ? ' (CSS 预处理器)' : ''} |
+| 代码规范 | ESLint 9 + Prettier |
+| 包管理 | pnpm (Monorepo) |
+${hasPinia ? `| 状态管理 | Pinia |` : ''}
+
+## 目录结构
+
+\`\`\`
+${projectName}/
+├── src/                    # 主应用源码
+│   ├── components/         # 通用组件
+│   │   └── Layout/         # 布局组件
+│   ├── pages/              # 页面组件
+│   │   ├── Home.vue        # 首页
+│   │   └── About.vue       # 关于页
+│   ├── router/             # 路由配置
+│   │   └── index.ts        # 路由定义
+│   ├── stores/             # Pinia 状态管理
+│   │   └── counter.ts      # 示例 Store
+│   ├── utils/              # 工具函数
+│   ├── types/              # TypeScript 类型定义
+│   ├── App.vue             # 根组件
+│   ├── main.ts             # 入口文件
+│   └── vite-env.d.ts       # Vite 类型声明
+├── packages/               # Monorepo 子包
+│   ├── shared/             # 共享工具库
+│   │   └── src/
+│   │       └── index.ts    # 工具函数导出
+│   └── ui/                 # UI 组件库
+│       └── src/
+│           ├── index.ts    # 组件导出
+│           └── components/ # Vue 组件
+├── public/                 # 静态资源
+├── index.html              # HTML 模板
+├── vite.config.ts          # Vite 配置
+├── tsconfig.json           # TypeScript 配置
+├── eslint.config.js        # ESLint 配置 (Flat Config)
+├── pnpm-workspace.yaml     # pnpm 工作区配置
+└── package.json
+\`\`\`
+
+## 快速开始
+
+### 安装依赖
+
+\`\`\`bash
+pnpm install
+\`\`\`
+
+### 开发
+
+\`\`\`bash
+pnpm dev
+\`\`\`
+
+访问 http://localhost:3000 查看应用。
+
+### 构建
+
+\`\`\`bash
+pnpm build
+\`\`\`
+
+### 预览构建结果
+
+\`\`\`bash
+pnpm preview
+\`\`\`
+
+### 代码检查
+
+\`\`\`bash
+# 检查代码规范
+pnpm lint
+
+# 自动修复
+pnpm lint:fix
+\`\`\`
+
+## Monorepo 使用
+
+本项目采用 pnpm workspace 管理 monorepo 结构。
+
+### 引用内部包
+
+\`\`\`typescript
+// 使用 shared 包的工具函数
+import { formatDate, sleep } from 'shared';
+
+// 使用 ui 包的组件
+import { MyButton } from 'ui';
+\`\`\`
+
+### 添加新包
+
+1. 在 \`packages/\` 目录下创建新包
+2. 在根目录 \`pnpm-workspace.yaml\` 已配置自动识别
+3. 在主应用 \`package.json\` 中添加依赖：\`"包名": "workspace:*"\`
+
+## 扩展命令
+
+| 命令 | 说明 |
+|------|------|
+| \`pnpm dev\` | 启动开发服务器 |
+| \`pnpm build\` | 构建生产版本 |
+| \`pnpm preview\` | 预览构建结果 |
+| \`pnpm lint\` | 代码检查 |
+| \`pnpm lint:fix\` | 自动修复代码问题 |
+| \`pnpm format\` | 格式化代码 |
+| \`pnpm type-check\` | TypeScript 类型检查 |
 `;
   } else {
-    readmeContent += `## Installation
+    // Library 项目
+    readmeContent += `一个 TypeScript 库项目。
+
+## 技术栈
+
+| 类别 | 技术 |
+|------|------|
+| 语言 | TypeScript 5 |
+| 构建 | TypeScript Compiler |
+| 代码规范 | ESLint 9 + Prettier |
+| 测试 | Jest |
+
+## 目录结构
+
+\`\`\`
+${projectName}/
+├── src/                    # 源码目录
+│   ├── index.ts            # 入口文件
+│   └── utils/              # 工具函数
+├── dist/                   # 构建输出
+│   ├── index.js            # JavaScript 输出
+│   └── index.d.ts          # 类型声明
+├── tests/                  # 测试文件
+├── tsconfig.json           # TypeScript 配置
+├── eslint.config.js        # ESLint 配置 (Flat Config)
+└── package.json
+\`\`\`
+
+## 安装
 
 \`\`\`bash
 npm install ${projectName}
+# 或
+pnpm add ${projectName}
 \`\`\`
 
-## Usage
+## 使用
 
 \`\`\`typescript
 import { hello } from '${projectName}';
@@ -148,18 +456,41 @@ import { hello } from '${projectName}';
 console.log(hello('World'));
 \`\`\`
 
-## Development
+## 开发
 
 \`\`\`bash
-# Install dependencies
-npm install
+# 安装依赖
+pnpm install
 
-# Build
-npm run build
+# 构建
+pnpm build
 
-# Test
-npm test
+# 开发模式 (监听文件变化)
+pnpm dev
+
+# 运行测试
+pnpm test
+
+# 代码检查
+pnpm lint
 \`\`\`
+
+## 发布
+
+1. 更新版本号：\`npm version patch|minor|major\`
+2. 构建：\`pnpm build\`
+3. 发布：\`npm publish\`
+
+## 扩展命令
+
+| 命令 | 说明 |
+|------|------|
+| \`pnpm build\` | 构建库 |
+| \`pnpm dev\` | 开发模式 (监听) |
+| \`pnpm test\` | 运行测试 |
+| \`pnpm lint\` | 代码检查 |
+| \`pnpm lint:fix\` | 自动修复代码问题 |
+| \`pnpm format\` | 格式化代码 |
 `;
   }
 

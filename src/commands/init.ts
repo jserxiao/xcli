@@ -35,7 +35,7 @@ async function getProjectConfig(
   // 如果使用了 --default 参数，使用默认配置
   if (options.default) {
     const projectType = (options.template as ProjectType) || 'library';
-    const styleType = (options.style as StyleType) || 'css';
+    const styleType = (options.style as StyleType) || 'less';
     const defaultPlugins = plugins.filter((p) => p.defaultEnabled).map((p) => p.name);
 
     // React/Vue 项目自动添加 vite 插件
@@ -43,9 +43,9 @@ async function getProjectConfig(
       defaultPlugins.push('vite');
     }
 
-    // 状态管理：命令行指定 > 默认值（Vue 用 pinia，React 用 none）
+    // 状态管理：命令行指定 > 默认值（Vue 用 pinia，React 用 redux）
     const stateManager: StateManagerType = (options.stateManager as StateManagerType) ||
-      (projectType === 'vue' ? 'pinia' : 'none');
+      (projectType === 'vue' ? 'pinia' : 'redux');
 
     return {
       projectName: projectName || options.projectName || path.basename(currentDir),
@@ -95,27 +95,27 @@ async function getProjectConfig(
   const projectType = basicAnswers.projectType as ProjectType;
 
   // 样式预处理器选择（仅 React/Vue 项目）
-  let styleType: StyleType = 'css';
+  let styleType: StyleType = 'less';
   if (projectType === 'react' || projectType === 'vue') {
     const styleAnswer = await inquirer.prompt({
       type: 'list',
       name: 'styleType',
       message: '选择样式预处理器:',
       choices: getStyleChoices(),
-      default: options.style || 'css',
+      default: options.style || 'less',
     });
     styleType = styleAnswer.styleType as StyleType;
   }
 
   // 状态管理选择（仅 React/Vue 项目）
-  let stateManager: StateManagerType = 'none';
+  let stateManager: StateManagerType = 'redux';
   if (projectType === 'react' || projectType === 'vue') {
     const stateAnswer = await inquirer.prompt({
       type: 'list',
       name: 'stateManager',
       message: '选择状态管理:',
       choices: getStateManagerChoices(projectType),
-      default: projectType === 'vue' ? 'pinia' : 'none',
+      default: projectType === 'vue' ? 'pinia' : 'redux',
     });
     stateManager = stateAnswer.stateManager as StateManagerType;
   }

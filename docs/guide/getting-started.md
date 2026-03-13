@@ -84,16 +84,25 @@ xcli i my-project -t react -s scss -m redux -p pnpm -d
 
 | 选项 | 说明 |
 |------|------|
-| `none` | 不使用状态管理（默认） |
-| `redux` | Redux Toolkit - React 官方推荐状态管理 |
+| `redux` | Redux Toolkit - React 官方推荐，类型安全（默认） |
 | `mobx` | MobX - 简单可扩展的状态管理 |
+| `none` | 不使用状态管理 |
+
+**Redux Toolkit 特性**：
+- 内置 Thunk 中间件支持异步 action
+- RTK Query 数据请求中间件
+- 类型安全的 hooks (`useAppDispatch`, `useAppSelector`)
+- 开发环境 Redux DevTools 支持
 
 ```bash
-# React + Redux Toolkit
-xcli i my-app -t react -m redux -d
+# React + Redux Toolkit（默认）
+xcli i my-app -t react -d
 
 # React + MobX
 xcli i my-app -t react -m mobx -d
+
+# React 无状态管理
+xcli i my-app -t react -m none -d
 ```
 
 ### Vue 项目

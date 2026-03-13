@@ -21,7 +21,7 @@ xcli i [projectName] [options]
 | 选项 | 简写 | 默认值 | 说明 |
 |------|------|--------|------|
 | `--template <name>` | `-t` | `library` | 项目类型 |
-| `--style <type>` | `-s` | `css` | 样式预处理器 |
+| `--style <type>` | `-s` | `less` | 样式预处理器 |
 | `--state-manager <type>` | `-m` | - | 状态管理方案 |
 | `--package-manager <name>` | `-p` | `pnpm` | 包管理器 |
 | `--skip-install` | `-si` | `false` | 跳过依赖安装 |
@@ -159,9 +159,16 @@ xcli i my-app -t vue -s less -d
 
 | 选项 | 说明 |
 |------|------|
-| `none` | 不使用状态管理（默认） |
-| `redux` | Redux Toolkit - 官方推荐，类型安全 |
+| `redux` | Redux Toolkit - 官方推荐，类型安全（默认） |
 | `mobx` | MobX - 简单直观，响应式编程 |
+| `none` | 不使用状态管理 |
+
+**Redux Toolkit 特性**：
+- 开箱即用的最佳实践配置
+- 内置 Immer 不可变状态处理
+- 支持 `createAsyncThunk` 异步 action
+- 开发环境 Redux DevTools 支持
+- 类型安全的 hooks (`useAppDispatch`, `useAppSelector`)
 
 ### Vue 项目
 
@@ -174,8 +181,8 @@ xcli i my-app -t vue -s less -d
 
 | 类型 | 适用场景 |
 |------|----------|
+| `less` | Less 预处理器，简洁语法（默认） |
 | `css` | 原生 CSS，无需编译 |
-| `less` | Less 预处理器，简洁语法 |
 | `scss` | Sass/SCSS，功能强大 |
 
 ## 包管理器
