@@ -183,8 +183,10 @@ export const vueTemplate = {
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="${context.projectName} - 由 xcli 生成的现代化 Vue 项目" />
+    <meta name="theme-color" content="#6366f1" />
     <title>${context.projectName}</title>
   </head>
   <body>
@@ -298,14 +300,29 @@ const { count, doubleCount } = storeToRefs(counterStore);
 
 <template>
   <div class="page">
-    <h1>首页</h1>
-    <p>欢迎使用 ${context.projectName}</p>
-    <div class="card">
-      <button type="button" @click="counterStore.decrement()">-</button>
-      <span style="margin: 0 1rem">count is {{ count }}</span>
-      <button type="button" @click="counterStore.increment()">+</button>
+    <div class="hero">
+      <div class="logo">⚡</div>
+      <h1>${context.projectName}</h1>
+      <p class="subtitle">由 xcli 生成的现代化 Vue 项目</p>
+      <div class="actions">
+        <a href="https://vuejs.org" target="_blank" rel="noopener noreferrer" class="btn primary">
+          📚 Vue 文档
+        </a>
+        <a href="https://vitejs.dev" target="_blank" rel="noopener noreferrer" class="btn secondary">
+          ⚡ Vite 文档
+        </a>
+      </div>
     </div>
-    <p>Double: {{ doubleCount }}</p>
+    <div class="card">
+      <h2>🧮 状态管理演示</h2>
+      <p>使用 Pinia 进行全局状态管理</p>
+      <div class="counter-demo">
+        <button type="button" @click="counterStore.decrement()">-</button>
+        <span class="count">{{ count }}</span>
+        <button type="button" @click="counterStore.increment()">+</button>
+      </div>
+      <p>双倍值: {{ doubleCount }}</p>
+    </div>
   </div>
 </template>
 
@@ -322,12 +339,27 @@ const count = ref(0);
 
 <template>
   <div class="page">
-    <h1>首页</h1>
-    <p>欢迎使用 ${context.projectName}</p>
+    <div class="hero">
+      <div class="logo">⚡</div>
+      <h1>${context.projectName}</h1>
+      <p class="subtitle">由 xcli 生成的现代化 Vue 项目</p>
+      <div class="actions">
+        <a href="https://vuejs.org" target="_blank" rel="noopener noreferrer" class="btn primary">
+          📚 Vue 文档
+        </a>
+        <a href="https://vitejs.dev" target="_blank" rel="noopener noreferrer" class="btn secondary">
+          ⚡ Vite 文档
+        </a>
+      </div>
+    </div>
     <div class="card">
-      <button type="button" @click="count--">-</button>
-      <span style="margin: 0 1rem">count is {{ count }}</span>
-      <button type="button" @click="count++">+</button>
+      <h2>🧮 计数器演示</h2>
+      <p>使用 Vue ref 进行响应式状态管理</p>
+      <div class="counter-demo">
+        <button type="button" @click="count--">-</button>
+        <span class="count">{{ count }}</span>
+        <button type="button" @click="count++">+</button>
+      </div>
     </div>
   </div>
 </template>

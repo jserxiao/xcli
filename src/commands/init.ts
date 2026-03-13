@@ -14,6 +14,8 @@ import {
   initGitRepo,
   logger,
   FileGenerator,
+  showBanner,
+  showSuccessMessage,
 } from '../utils/index.js';
 import {
   getTemplateChoices,
@@ -234,12 +236,13 @@ async function getProjectConfig(
  * 执行 init 命令
  */
 export async function init(projectName: string | undefined, options: CLIOptions): Promise<void> {
+  // 显示 CLI Banner
+  showBanner();
+
   const currentDir = process.cwd();
   const projectPath = projectName
     ? path.join(currentDir, projectName)
     : currentDir;
-
-  logger.title('🚀 初始化项目');
 
   // 获取项目配置
   const config = await getProjectConfig(options, currentDir, projectName);
@@ -438,22 +441,5 @@ export async function init(projectName: string | undefined, options: CLIOptions)
   }
 
   // 完成
-  logger.newline();
-  logger.success('🎉 项目初始化完成!');
-  logger.newline();
-
-  if (projectName) {
-    console.log(`  cd ${projectName}`);
-  }
-  if (!config.installDeps) {
-    console.log(`  ${config.packageManager} install`);
-  }
-
-  // 根据项目类型显示不同的启动命令
-  if (config.projectType === 'react' || config.projectType === 'vue') {
-    console.log(`  ${config.packageManager} run dev`);
-  } else {
-    console.log(`  ${config.packageManager} run build`);
-  }
-  logger.newline();
+  showSuccessMessage(config.projectName);
 }

@@ -22,16 +22,6 @@ import {
 import { axiosPlugin, fetchPlugin } from '../plugins/http-client/index.js';
 
 /**
- * 获取打包工具类型
- */
-function getBundlerType(selectedPlugins: string[]): BundlerType {
-  if (selectedPlugins.includes('vite')) return 'vite';
-  if (selectedPlugins.includes('webpack')) return 'webpack';
-  if (selectedPlugins.includes('rollup')) return 'rollup';
-  return 'none';
-}
-
-/**
  * 创建 Redux store 文件
  */
 async function createReduxStore(projectPath: string, bundler: BundlerType = 'vite') {
@@ -224,8 +214,10 @@ export const reactTemplate = {
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="${context.projectName} - 由 xcli 生成的现代化 React 项目" />
+    <meta name="theme-color" content="#6366f1" />
     <title>${context.projectName}</title>
   </head>
   <body>
@@ -370,12 +362,27 @@ function Home() {
 
   return (
     <div className="page">
-      <h1>首页</h1>
-      <p>欢迎使用 ${context.projectName}</p>
+      <div className="hero">
+        <div className="logo">⚡</div>
+        <h1>${context.projectName}</h1>
+        <p className="subtitle">由 xcli 生成的现代化 React 项目</p>
+        <div className="actions">
+          <a href="https://react.dev" target="_blank" rel="noopener noreferrer" className="btn primary">
+            📚 React 文档
+          </a>
+          <a href="https://vitejs.dev" target="_blank" rel="noopener noreferrer" className="btn secondary">
+            ⚡ Vite 文档
+          </a>
+        </div>
+      </div>
       <div className="card">
-        <button onClick={() => dispatch(decrement())}>-</button>
-        <span style={{ margin: '0 1rem' }}>count is {count}</span>
-        <button onClick={() => dispatch(increment())}>+</button>
+        <h2>🧮 状态管理演示</h2>
+        <p>使用 Redux 进行全局状态管理</p>
+        <div className="counter-demo">
+          <button onClick={() => dispatch(decrement())}>-</button>
+          <span className="count">{count}</span>
+          <button onClick={() => dispatch(increment())}>+</button>
+        </div>
       </div>
     </div>
   );
@@ -391,12 +398,27 @@ import './Home.${styleExt}';
 const Home = observer(() => {
   return (
     <div className="page">
-      <h1>首页</h1>
-      <p>欢迎使用 ${context.projectName}</p>
+      <div className="hero">
+        <div className="logo">⚡</div>
+        <h1>${context.projectName}</h1>
+        <p className="subtitle">由 xcli 生成的现代化 React 项目</p>
+        <div className="actions">
+          <a href="https://react.dev" target="_blank" rel="noopener noreferrer" className="btn primary">
+            📚 React 文档
+          </a>
+          <a href="https://vitejs.dev" target="_blank" rel="noopener noreferrer" className="btn secondary">
+            ⚡ Vite 文档
+          </a>
+        </div>
+      </div>
       <div className="card">
-        <button onClick={() => counterStore.decrement()}>-</button>
-        <span style={{ margin: '0 1rem' }}>count is {counterStore.count}</span>
-        <button onClick={() => counterStore.increment()}>+</button>
+        <h2>🧮 状态管理演示</h2>
+        <p>使用 MobX 进行响应式状态管理</p>
+        <div className="counter-demo">
+          <button onClick={() => counterStore.decrement()}>-</button>
+          <span className="count">{counterStore.count}</span>
+          <button onClick={() => counterStore.increment()}>+</button>
+        </div>
       </div>
     </div>
   );
@@ -413,12 +435,27 @@ function Home() {
 
   return (
     <div className="page">
-      <h1>首页</h1>
-      <p>欢迎使用 ${context.projectName}</p>
+      <div className="hero">
+        <div className="logo">⚡</div>
+        <h1>${context.projectName}</h1>
+        <p className="subtitle">由 xcli 生成的现代化 React 项目</p>
+        <div className="actions">
+          <a href="https://react.dev" target="_blank" rel="noopener noreferrer" className="btn primary">
+            📚 React 文档
+          </a>
+          <a href="https://vitejs.dev" target="_blank" rel="noopener noreferrer" className="btn secondary">
+            ⚡ Vite 文档
+          </a>
+        </div>
+      </div>
       <div className="card">
-        <button onClick={() => setCount((count) => count - 1)}>-</button>
-        <span style={{ margin: '0 1rem' }}>count is {count}</span>
-        <button onClick={() => setCount((count) => count + 1)}>+</button>
+        <h2>🧮 计数器演示</h2>
+        <p>使用 React useState 进行状态管理</p>
+        <div className="counter-demo">
+          <button onClick={() => setCount((count) => count - 1)}>-</button>
+          <span className="count">{count}</span>
+          <button onClick={() => setCount((count) => count + 1)}>+</button>
+        </div>
       </div>
     </div>
   );

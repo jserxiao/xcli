@@ -3,9 +3,18 @@
 import { Command } from 'commander';
 import { init } from './commands/init.js';
 import { addPlugin, removePlugin, listPlugins } from './commands/plugin.js';
-import { logger } from './utils/logger.js';
+import { logger, showMiniBanner } from './utils/logger.js';
 
 const program = new Command();
+
+// 检查是否是 --help 或 -h 且没有子命令
+const args = process.argv.slice(2);
+const isHelpRequest = args.includes('--help') || args.includes('-h') || args.length === 0;
+
+// 如果是 --help 或无参数，先显示 Banner
+if (isHelpRequest) {
+  showMiniBanner();
+}
 
 program
   .name('xcli')
