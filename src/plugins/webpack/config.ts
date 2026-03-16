@@ -250,16 +250,67 @@ function getBundleAnalyzerPlugin(): string {
 }
 
 /**
- * DefinePlugin 配置（环境变量注入）
+ * 加载环境变量
+ * @param envPrefix 环境变量前缀，React 使用 'REACT_APP_'，Vue 使用 'VUE_'
  */
-function getDefinePlugin(projectType: 'react' | 'vue' = 'react'): string {
-  if (projectType === 'react') {
-    return `new DefinePlugin({
+function getEnvLoading(envPrefix: string = 'REACT_APP_'): string {
+  return `// 加载环境变量
+const dotenv = require('dotenv');
+const path = require('path');
+
+// 根据环境加载对应的 .env 文件
+const envFile = isProduction ? '.env.production' : '.env.development';
+const envPath = path.resolve(__dirname, envFile);
+const localEnvPath = path.resolve(__dirname, '.env.local');
+
+// 加载顺序: .env.local > .env.{environment}
+let envConfig = {};
+try {
+  envConfig = { ...dotenv.config({ path: envPath }).parsed || {} };
+} catch (e) {}
+try {
+  envConfig = { ...envConfig, ...dotenv.config({ path: localEnvPath }).parsed || {} };
+} catch (e) {}
+
+// 定义环境变量前缀
+const ENV_PREFIX = '${envPrefix}';
+
+// 构建 DefinePlugin 的环境变量对象
+const envKeys = Object.keys(envConfig).reduce((acc, key) => {
+  if (key.startsWith(ENV_PREFIX) || key === 'NODE_ENV') {
+    acc[\`process.env.\${key}\`] = JSON.stringify(envConfig[key]);
+  }
+  return acc;
+}, {});
+`;
+}
+
+/**
+ * DefinePlugin 配置（环境变量注入）- React 版本
+ */
+function getReactDefinePlugin(): string {
+  return `new DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
+      // 从 .env 文件加载的环境变量
+      ...envKeys,
+      // 额外的全局常量
       'process.env.REACT_APP_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
     }),`;
-  }
-  return '';
+}
+
+/**
+ * DefinePlugin 配置（环境变量注入）- Vue 版本
+ */
+function getVueDefinePlugin(): string {
+  return `new DefinePlugin({
+        // Vue 相关配置
+        __VUE_OPTIONS_API__: true,
+        __VUE_PROD_DEVTOOLS__: isDevelopment,
+        __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
+        // 环境变量
+        'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
+        ...envKeys,
+      }),`;
 }
 
 /**
@@ -294,17 +345,6 @@ function getReactRefreshPlugin(): string {
  */
 function getVueLoaderPlugin(): string {
   return `new VueLoaderPlugin(),`;
-}
-
-/**
- * Vue DefinePlugin 配置
- */
-function getVueDefinePlugin(): string {
-  return `new DefinePlugin({
-        __VUE_OPTIONS_API__: true,
-        __VUE_PROD_DEVTOOLS__: isDevelopment,
-        __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
-      }),`;
 }
 
 // ============================================================
@@ -649,6 +689,7 @@ module.exports = (env, argv) => {
   const isDevelopment = !isProduction;
   const isAnalyze = env && env.analyze;
 
+${getEnvLoading('REACT_APP_')}
   return {
     entry: '${entryFile}',
     ${getOutputConfig()}
@@ -670,7 +711,7 @@ module.exports = (env, argv) => {
     plugins: [
       ${getHtmlWebpackPlugin()}
       ${getMiniCssExtractPlugin()}
-      ${getDefinePlugin('react')}
+      ${getReactDefinePlugin()}
       ${getCompressionPlugin()}
       ${getReactRefreshPlugin()}
       ${getImageMinimizerPlugin()}
@@ -734,6 +775,7 @@ module.exports = (env, argv) => {
   const isDevelopment = !isProduction;
   const isAnalyze = env && env.analyze;
 
+${getEnvLoading('VUE_')}
   return {
     entry: '${entryFile}',
     ${getOutputConfig()}

@@ -3,6 +3,7 @@
 import { Command } from 'commander';
 import { init } from './commands/init.js';
 import { addPlugin, removePlugin, listPlugins } from './commands/plugin.js';
+import { upgrade, showVersion, CURRENT_VERSION } from './commands/upgrade.js';
 import { logger, showMiniBanner } from './utils/logger.js';
 
 const program = new Command();
@@ -19,7 +20,7 @@ if (isHelpRequest) {
 program
   .name('xcli')
   .description('一个可插拔的 TypeScript 项目脚手架 CLI 工具')
-  .version('1.0.0');
+  .version(CURRENT_VERSION);
 
 // init 命令
 program
@@ -88,6 +89,36 @@ pluginCommand
       await listPlugins();
     } catch (error) {
       logger.error(`列出插件失败: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// upgrade 命令
+program
+  .command('upgrade')
+  .alias('up')
+  .description('升级 xcli 到最新版本')
+  .option('-c, --check', '仅检查是否有更新，不执行升级')
+  .option('-t, --tag <tag>', '指定升级到的标签 (latest/next/beta等)')
+  .action(async (options) => {
+    try {
+      await upgrade(options);
+    } catch (error) {
+      logger.error(`升级失败: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// version 命令（显示详细信息）
+program
+  .command('version')
+  .alias('v')
+  .description('显示 xcli 版本信息')
+  .action(async () => {
+    try {
+      await showVersion();
+    } catch (error) {
+      logger.error(`获取版本信息失败: ${(error as Error).message}`);
       process.exit(1);
     }
   });

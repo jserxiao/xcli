@@ -53,6 +53,19 @@ xcli plugin add eslint prettier
 xcli plugin remove eslint
 ```
 
+### 升级 CLI
+
+```bash
+# 检查是否有更新
+xcli upgrade --check
+
+# 升级到最新版本
+xcli upgrade
+
+# 查看当前版本
+xcli version
+```
+
 ## 可用插件
 
 ### 代码检查

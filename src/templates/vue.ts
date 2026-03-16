@@ -12,11 +12,13 @@ import {
   createVueUiPackage,
   getViteEnvDts,
   getGlobalTypeDeclarations,
+  createEnvFiles,
   // 状态管理模板
   getPiniaStoreIndex,
   getPiniaCounterStore,
 } from './shared.js';
 import { axiosPlugin, fetchPlugin } from '../plugins/http-client/index.js';
+import { getVueViteConfig } from '../plugins/vite/index.js';
 import {
   BUNDLER_VERSIONS,
   FRAMEWORK_VERSIONS,
@@ -25,6 +27,7 @@ import {
   HTTP_CLIENT_VERSIONS,
   TS_VERSIONS,
   BABEL_VERSIONS,
+  ENV_VERSIONS,
 } from '../constants/index.js';
 
 /**
@@ -161,6 +164,9 @@ export const vueTemplate = {
 
     // 创建通用配置文件
     await createRootConfigFiles(projectPath, 'vue', bundler, useTypeScript);
+
+    // 创建环境变量配置文件
+    await createEnvFiles(projectPath, 'vue', bundler);
 
     // ============ src 目录 (主应用源代码) ============
     await createSrcDirectories(projectPath);
@@ -456,33 +462,7 @@ ${getPageStyles(styleType)}
       // vite.config.ts or vite.config.js
       await fs.writeFile(
         path.join(projectPath, `vite.config.${useTypeScript ? 'ts' : 'js'}`),
-        `import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import legacy from '@vitejs/plugin-legacy';
-import autoprefixer from 'autoprefixer';
-
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    vue(),
-    legacy({
-      targets: ['defaults', 'not IE 11'],
-    }),
-  ],
-  css: {
-    postcss: {
-      plugins: [autoprefixer()],
-    },
-  },
-  server: {
-    port: 3000,
-    open: true,
-  },
-  build: {
-    sourcemap: true,
-  },
-});
-`,
+        getVueViteConfig(),
         'utf-8'
       );
     } else if (bundler === 'webpack') {
@@ -572,6 +552,8 @@ export default defineConfig({
       deps.devDependencies['image-minimizer-webpack-plugin'] = BUNDLER_VERSIONS['image-minimizer-webpack-plugin'];
       // Gzip 压缩
       deps.devDependencies['compression-webpack-plugin'] = BUNDLER_VERSIONS['compression-webpack-plugin'];
+      // 环境变量
+      deps.devDependencies['dotenv'] = ENV_VERSIONS.dotenv;
       // Babel
       deps.devDependencies['@babel/core'] = BABEL_VERSIONS['@babel/core'];
       deps.devDependencies['babel-loader'] = BABEL_VERSIONS['babel-loader'];

@@ -149,6 +149,166 @@ ignore-dep-scripts=true
 }
 
 /**
+ * 获取环境变量前缀
+ * @param framework 框架类型
+ * @param bundler 打包工具类型
+ */
+export function getEnvPrefix(framework: 'react' | 'vue', bundler: BundlerType = 'vite'): string {
+  // Vite 统一使用 VITE_ 前缀
+  if (bundler === 'vite') {
+    return 'VITE';
+  }
+  // Webpack: React 使用 REACT_APP_，Vue 使用 VUE_
+  return framework === 'react' ? 'REACT_APP' : 'VUE';
+}
+
+/**
+ * 获取 .env 环境变量基础模板
+ * @param framework 框架类型
+ * @param bundler 打包工具类型
+ */
+export function getEnvBase(framework: 'react' | 'vue', bundler: BundlerType = 'vite'): string {
+  const envPrefix = getEnvPrefix(framework, bundler);
+  
+  return `# 环境变量配置文件
+# 此文件应添加到 .gitignore，不要提交到代码仓库
+
+# API 基础地址
+${envPrefix}_API_BASE_URL=/api
+
+# 应用标题
+${envPrefix}_APP_TITLE=My App
+
+# 应用端口（部分打包工具支持）
+PORT=3000
+`;
+}
+
+/**
+ * 获取 .env.development 开发环境变量模板
+ * @param framework 框架类型
+ * @param bundler 打包工具类型
+ */
+export function getEnvDevelopment(framework: 'react' | 'vue', bundler: BundlerType = 'vite'): string {
+  const envPrefix = getEnvPrefix(framework, bundler);
+  
+  return `# 开发环境变量配置
+# 此文件可以提交到代码仓库
+
+# 环境标识
+NODE_ENV=development
+
+# API 基础地址
+${envPrefix}_API_BASE_URL=/api
+
+# 应用标题
+${envPrefix}_APP_TITLE=My App (Development)
+
+# 是否开启 Mock 数据
+${envPrefix}_ENABLE_MOCK=true
+
+# 调试模式
+${envPrefix}_DEBUG=true
+
+# 开发服务器端口
+PORT=3000
+`;
+}
+
+/**
+ * 获取 .env.production 生产环境变量模板
+ * @param framework 框架类型
+ * @param bundler 打包工具类型
+ */
+export function getEnvProduction(framework: 'react' | 'vue', bundler: BundlerType = 'vite'): string {
+  const envPrefix = getEnvPrefix(framework, bundler);
+  
+  return `# 生产环境变量配置
+# 此文件可以提交到代码仓库
+
+# 环境标识
+NODE_ENV=production
+
+# API 基础地址（生产环境请修改为实际地址）
+${envPrefix}_API_BASE_URL=https://api.example.com
+
+# 应用标题
+${envPrefix}_APP_TITLE=My App
+
+# 是否开启 Mock 数据
+${envPrefix}_ENABLE_MOCK=false
+
+# 调试模式
+${envPrefix}_DEBUG=false
+`;
+}
+
+/**
+ * 获取 .env.example 示例环境变量模板
+ * @param framework 框架类型
+ * @param bundler 打包工具类型
+ */
+export function getEnvExample(framework: 'react' | 'vue', bundler: BundlerType = 'vite'): string {
+  const envPrefix = getEnvPrefix(framework, bundler);
+  
+  return `# 环境变量示例文件
+# 复制此文件为 .env.local 并填入实际值
+
+# API 基础地址
+${envPrefix}_API_BASE_URL=/api
+
+# 应用标题
+${envPrefix}_APP_TITLE=My App
+
+# 是否开启 Mock 数据
+${envPrefix}_ENABLE_MOCK=false
+
+# 调试模式
+${envPrefix}_DEBUG=false
+`;
+}
+
+/**
+ * 创建环境变量配置文件
+ * @param projectPath 项目路径
+ * @param framework 框架类型
+ * @param bundler 打包工具类型
+ */
+export async function createEnvFiles(
+  projectPath: string,
+  framework: 'react' | 'vue',
+  bundler: BundlerType = 'vite'
+): Promise<void> {
+  // .env - 本地环境变量（不提交）
+  await fs.writeFile(
+    path.join(projectPath, '.env'),
+    getEnvBase(framework, bundler),
+    'utf-8'
+  );
+
+  // .env.development - 开发环境变量（提交）
+  await fs.writeFile(
+    path.join(projectPath, '.env.development'),
+    getEnvDevelopment(framework, bundler),
+    'utf-8'
+  );
+
+  // .env.production - 生产环境变量（提交）
+  await fs.writeFile(
+    path.join(projectPath, '.env.production'),
+    getEnvProduction(framework, bundler),
+    'utf-8'
+  );
+
+  // .env.example - 示例文件（提交）
+  await fs.writeFile(
+    path.join(projectPath, '.env.example'),
+    getEnvExample(framework, bundler),
+    'utf-8'
+  );
+}
+
+/**
  * 获取全局类型声明内容（通用资源类型声明）
  * @param framework 框架类型
  */

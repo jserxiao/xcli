@@ -42,6 +42,7 @@ export default defineConfig({
           items: [
             { text: 'init', link: '/commands/init' },
             { text: 'plugin', link: '/commands/plugin' },
+            { text: 'upgrade', link: '/commands/upgrade' },
           ],
         },
       ],

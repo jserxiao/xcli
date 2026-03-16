@@ -166,3 +166,8 @@ export const BABEL_VERSIONS = {
   '@babel/plugin-transform-runtime': '^7.24.0',
   '@babel/runtime': '^7.24.0',
 } as const;
+
+// ============ 环境变量工具 ============
+export const ENV_VERSIONS = {
+  dotenv: '^16.4.5',
+} as const;

@@ -5,31 +5,40 @@ import { BUNDLER_VERSIONS, STYLE_VERSIONS } from '../../constants/index.js';
  * 获取 React Vite 配置
  */
 function getReactViteConfig(): string {
-  return `import { defineConfig } from 'vite';
+  return `import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';
 import autoprefixer from 'autoprefixer';
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    react(),
-    legacy({
-      targets: ['defaults', 'not IE 11'],
-    }),
-  ],
-  css: {
-    postcss: {
-      plugins: [autoprefixer()],
+export default defineConfig(({ mode }) => {
+  // 加载环境变量
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
+  
+  return {
+    plugins: [
+      react(),
+      legacy({
+        targets: ['defaults', 'not IE 11'],
+      }),
+    ],
+    css: {
+      postcss: {
+        plugins: [autoprefixer()],
+      },
     },
-  },
-  server: {
-    port: 3000,
-    open: true,
-  },
-  build: {
-    sourcemap: true,
-  },
+    server: {
+      port: 3000,
+      open: true,
+    },
+    build: {
+      sourcemap: true,
+    },
+    // 定义全局常量，将环境变量注入到应用中
+    define: {
+      __APP_ENV__: JSON.stringify(env),
+    },
+  };
 });
 `;
 }
@@ -38,31 +47,40 @@ export default defineConfig({
  * 获取 Vue Vite 配置
  */
 function getVueViteConfig(): string {
-  return `import { defineConfig } from 'vite';
+  return `import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import legacy from '@vitejs/plugin-legacy';
 import autoprefixer from 'autoprefixer';
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    vue(),
-    legacy({
-      targets: ['defaults', 'not IE 11'],
-    }),
-  ],
-  css: {
-    postcss: {
-      plugins: [autoprefixer()],
+export default defineConfig(({ mode }) => {
+  // 加载环境变量
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
+  
+  return {
+    plugins: [
+      vue(),
+      legacy({
+        targets: ['defaults', 'not IE 11'],
+      }),
+    ],
+    css: {
+      postcss: {
+        plugins: [autoprefixer()],
+      },
     },
-  },
-  server: {
-    port: 3000,
-    open: true,
-  },
-  build: {
-    sourcemap: true,
-  },
+    server: {
+      port: 3000,
+      open: true,
+    },
+    build: {
+      sourcemap: true,
+    },
+    // 定义全局常量，将环境变量注入到应用中
+    define: {
+      __APP_ENV__: JSON.stringify(env),
+    },
+  };
 });
 `;
 }
@@ -119,6 +137,9 @@ function getViteConfig(context: PluginContext): string {
       return getLibraryViteConfig();
   }
 }
+
+// 导出配置生成函数，供模板使用
+export { getReactViteConfig, getVueViteConfig, getLibraryViteConfig };
 
 export const vitePlugin: Plugin = {
   name: 'vite',
