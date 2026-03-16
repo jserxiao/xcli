@@ -9,17 +9,17 @@ export interface Plugin {
   /** 插件描述 */
   description: string;
   /** 插件类别 */
-  category: 'linter' | 'formatter' | 'test' | 'git' | 'bundler' | 'other';
+  category: 'linter' | 'formatter' | 'test' | 'git' | 'bundler' | 'tooling' | 'other';
   /** 是否默认启用 */
   defaultEnabled?: boolean;
-  /** 依赖包 */
-  dependencies?: Record<string, string>;
-  /** 开发依赖包 */
-  devDependencies?: Record<string, string>;
+  /** 依赖包（支持静态或动态） */
+  dependencies?: Record<string, string> | ((context: PluginContext) => Record<string, string>);
+  /** 开发依赖包（支持静态或动态） */
+  devDependencies?: Record<string, string> | ((context: PluginContext) => Record<string, string>);
   /** 需要生成的文件 */
   files?: PluginFile[];
-  /** 需要添加的 npm scripts */
-  scripts?: Record<string, string>;
+  /** 需要添加的 npm scripts（支持静态或动态） */
+  scripts?: Record<string, string> | ((context: PluginContext) => Record<string, string>);
   /** 安装后的回调 */
   postInstall?: (context: PluginContext) => Promise<void>;
 }

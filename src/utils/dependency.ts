@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
-import type { Plugin, ProjectConfig } from '../types/index.js';
+import type { Plugin, PluginContext, ProjectConfig } from '../types/index.js';
 
 /**
  * package.json 模板
@@ -34,6 +34,28 @@ interface TemplateDependencies {
 }
 
 /**
+ * 解析动态依赖
+ */
+function resolveDependencies(
+  deps: Record<string, string> | ((context: PluginContext) => Record<string, string>) | undefined,
+  context: PluginContext
+): Record<string, string> {
+  if (!deps) return {};
+  return typeof deps === 'function' ? deps(context) : deps;
+}
+
+/**
+ * 解析动态脚本
+ */
+function resolveScripts(
+  scripts: Record<string, string> | ((context: PluginContext) => Record<string, string>) | undefined,
+  context: PluginContext
+): Record<string, string> {
+  if (!scripts) return {};
+  return typeof scripts === 'function' ? scripts(context) : scripts;
+}
+
+/**
  * 生成 package.json
  */
 export async function generatePackageJson(
@@ -41,7 +63,8 @@ export async function generatePackageJson(
   config: ProjectConfig,
   plugins: Plugin[],
   templateDeps?: TemplateDependencies,
-  templateScripts?: Record<string, string>
+  templateScripts?: Record<string, string>,
+  context?: PluginContext
 ): Promise<void> {
   // 合并所有依赖
   const dependencies: Record<string, string> = {};
@@ -55,15 +78,13 @@ export async function generatePackageJson(
 
   // 收集所有插件的依赖和脚本
   for (const plugin of plugins) {
-    // 合并运行时依赖
-    if (plugin.dependencies) {
-      Object.assign(dependencies, plugin.dependencies);
-    }
+    // 合并运行时依赖（支持动态）
+    const pluginDeps = resolveDependencies(plugin.dependencies, context as PluginContext);
+    Object.assign(dependencies, pluginDeps);
 
-    // 合并开发依赖
-    if (plugin.devDependencies) {
-      Object.assign(devDependencies, plugin.devDependencies);
-    }
+    // 合并开发依赖（支持动态）
+    const pluginDevDeps = resolveDependencies(plugin.devDependencies, context as PluginContext);
+    Object.assign(devDependencies, pluginDevDeps);
   }
 
   // 合并脚本：优先使用模板脚本，然后是插件脚本
@@ -72,9 +93,8 @@ export async function generatePackageJson(
   };
 
   for (const plugin of plugins) {
-    if (plugin.scripts) {
-      Object.assign(scripts, plugin.scripts);
-    }
+    const pluginScripts = resolveScripts(plugin.scripts, context as PluginContext);
+    Object.assign(scripts, pluginScripts);
   }
 
   // 确保 prepare 脚本在最后执行（用于 husky）

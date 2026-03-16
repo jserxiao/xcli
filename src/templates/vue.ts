@@ -11,39 +11,48 @@ import {
   createSharedPackage,
   createVueUiPackage,
   getViteEnvDts,
+  getGlobalTypeDeclarations,
   // 状态管理模板
   getPiniaStoreIndex,
   getPiniaCounterStore,
 } from './shared.js';
 import { axiosPlugin, fetchPlugin } from '../plugins/http-client/index.js';
+import {
+  BUNDLER_VERSIONS,
+  FRAMEWORK_VERSIONS,
+  STYLE_VERSIONS,
+  STATE_MANAGER_VERSIONS,
+  HTTP_CLIENT_VERSIONS,
+  TS_VERSIONS,
+  BABEL_VERSIONS,
+} from '../constants/index.js';
 
 /**
- * 获取打包工具类型
+ * 获取文件扩展名（根据是否使用 TypeScript）
  */
-function getBundlerType(selectedPlugins: string[]): BundlerType {
-  if (selectedPlugins.includes('vite')) return 'vite';
-  if (selectedPlugins.includes('webpack')) return 'webpack';
-  if (selectedPlugins.includes('rollup')) return 'rollup';
-  return 'none';
+function getExt(useTypeScript: boolean): string {
+  return useTypeScript ? '.ts' : '.js';
 }
 
 /**
  * 创建 Pinia store 文件
  */
-async function createPiniaStore(projectPath: string) {
+async function createPiniaStore(projectPath: string, useTypeScript: boolean = true) {
   const storePath = path.join(projectPath, 'src', 'store');
   await fs.ensureDir(storePath);
 
-  // store/index.ts
+  const ext = getExt(useTypeScript);
+
+  // store/index.ts or store/index.js
   await fs.writeFile(
-    path.join(storePath, 'index.ts'),
+    path.join(storePath, `index${ext}`),
     getPiniaStoreIndex(),
     'utf-8'
   );
 
-  // store/counter.ts
+  // store/counter.ts or store/counter.js
   await fs.writeFile(
-    path.join(storePath, 'counter.ts'),
+    path.join(storePath, `counter${ext}`),
     getPiniaCounterStore(),
     'utf-8'
   );
@@ -58,9 +67,11 @@ export const vueTemplate = {
   description: 'Vue 3 前端项目 (pnpm monorepo)',
 
   createStructure: async (projectPath: string, context: PluginContext) => {
-    const { styleType = 'css', stateManager = 'pinia', httpClient = 'axios', bundler = 'vite', selectedPlugins = [] } = context;
+    const { styleType = 'css', stateManager = 'pinia', httpClient = 'axios', bundler = 'vite', selectedPlugins = [], useTypeScript = true } = context;
     const styleExt = getStyleExt(styleType);
     const styleLang = styleType === 'css' ? '' : ` lang="${styleExt}"`;
+    const ext = getExt(useTypeScript);
+    const scriptLang = useTypeScript ? ' lang="ts"' : '';
 
     // ============ 根目录文件 ============
 
@@ -83,26 +94,28 @@ export const vueTemplate = {
     if (bundler === 'vite') {
       basePackageJson.scripts = {
         dev: 'vite',
-        build: 'vue-tsc && vite build',
+        build: useTypeScript ? 'vue-tsc && vite build' : 'vite build',
         preview: 'vite preview',
-        lint: 'eslint src --ext .ts,.vue',
-        'lint:fix': 'eslint src --ext .ts,.vue --fix',
-        format: 'prettier --write "src/**/*.{ts,vue,css,scss,less}"',
+        lint: `eslint src --ext ${useTypeScript ? '.ts,' : ''}.vue`,
+        'lint:fix': `eslint src --ext ${useTypeScript ? '.ts,' : ''}.vue --fix`,
+        format: `prettier --write "src/**/*{${useTypeScript ? '.ts,' : ''}.vue,css,scss,less}"`,
         clean: 'rm -rf dist node_modules',
       };
       basePackageJson.devDependencies = {
         '@vitejs/plugin-legacy': '^5.3.0',
         '@vitejs/plugin-vue': '^5.0.3',
         autoprefixer: '^10.4.17',
-        'vue-tsc': '^2.0.0',
       };
+      if (useTypeScript) {
+        basePackageJson.devDependencies['vue-tsc'] = '^2.0.0';
+      }
     } else if (bundler === 'webpack') {
       basePackageJson.scripts = {
         dev: 'webpack serve --mode development',
         build: 'webpack --mode production',
-        lint: 'eslint src --ext .ts,.vue',
-        'lint:fix': 'eslint src --ext .ts,.vue --fix',
-        format: 'prettier --write "src/**/*.{ts,vue,css,scss,less}"',
+        lint: `eslint src --ext ${useTypeScript ? '.ts,' : ''}.vue`,
+        'lint:fix': `eslint src --ext ${useTypeScript ? '.ts,' : ''}.vue --fix`,
+        format: `prettier --write "src/**/*{${useTypeScript ? '.ts,' : ''}.vue,css,scss,less}"`,
         clean: 'rm -rf dist node_modules',
       };
       basePackageJson.devDependencies = {
@@ -110,7 +123,6 @@ export const vueTemplate = {
         'webpack-cli': '^6.0.1',
         'webpack-dev-server': '^5.2.3',
         'html-webpack-plugin': '^5.6.0',
-        'ts-loader': '^9.5.1',
         'vue-loader': '^17.4.2',
         '@vue/compiler-sfc': '^3.4.0',
         'css-loader': '^7.1.2',
@@ -123,19 +135,21 @@ export const vueTemplate = {
       // 默认使用 vite
       basePackageJson.scripts = {
         dev: 'vite',
-        build: 'vue-tsc && vite build',
+        build: useTypeScript ? 'vue-tsc && vite build' : 'vite build',
         preview: 'vite preview',
-        lint: 'eslint src --ext .ts,.vue',
-        'lint:fix': 'eslint src --ext .ts,.vue --fix',
-        format: 'prettier --write "src/**/*.{ts,vue,css,scss,less}"',
+        lint: `eslint src --ext ${useTypeScript ? '.ts,' : ''}.vue`,
+        'lint:fix': `eslint src --ext ${useTypeScript ? '.ts,' : ''}.vue --fix`,
+        format: `prettier --write "src/**/*{${useTypeScript ? '.ts,' : ''}.vue,css,scss,less}"`,
         clean: 'rm -rf dist node_modules',
       };
       basePackageJson.devDependencies = {
         '@vitejs/plugin-legacy': '^5.3.0',
         '@vitejs/plugin-vue': '^5.0.3',
         autoprefixer: '^10.4.17',
-        'vue-tsc': '^2.0.0',
       };
+      if (useTypeScript) {
+        basePackageJson.devDependencies['vue-tsc'] = '^2.0.0';
+      }
     }
 
     // 创建根目录 package.json
@@ -146,7 +160,7 @@ export const vueTemplate = {
     );
 
     // 创建通用配置文件
-    await createRootConfigFiles(projectPath, 'vue', bundler);
+    await createRootConfigFiles(projectPath, 'vue', bundler, useTypeScript);
 
     // ============ src 目录 (主应用源代码) ============
     await createSrcDirectories(projectPath);
@@ -154,7 +168,7 @@ export const vueTemplate = {
 
     // 创建 Pinia store 文件
     if (stateManager === 'pinia') {
-      await createPiniaStore(projectPath);
+      await createPiniaStore(projectPath, useTypeScript);
     }
 
     // 创建 HTTP 请求相关文件
@@ -162,7 +176,7 @@ export const vueTemplate = {
       await fs.ensureDir(path.join(projectPath, 'src', 'api'));
       const content = axiosPlugin.files![0].content;
       await fs.writeFile(
-        path.join(projectPath, 'src', 'api', 'request.ts'),
+        path.join(projectPath, 'src', 'api', `request${ext}`),
         typeof content === 'function' ? content(context) : content,
         'utf-8'
       );
@@ -170,13 +184,14 @@ export const vueTemplate = {
       await fs.ensureDir(path.join(projectPath, 'src', 'api'));
       const content = fetchPlugin.files![0].content;
       await fs.writeFile(
-        path.join(projectPath, 'src', 'api', 'request.ts'),
+        path.join(projectPath, 'src', 'api', `request${ext}`),
         typeof content === 'function' ? content(context) : content,
         'utf-8'
       );
     }
 
     // index.html
+    const mainFile = useTypeScript ? '/src/main.ts' : '/src/main.js';
     await fs.writeFile(
       path.join(projectPath, 'index.html'),
       `<!DOCTYPE html>
@@ -191,43 +206,43 @@ export const vueTemplate = {
   </head>
   <body>
     <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="${mainFile}"></script>
   </body>
 </html>
 `,
       'utf-8'
     );
 
-    // src/main.ts (根据状态管理生成不同内容)
-    let mainTs = `import { createApp } from 'vue';
+    // src/main.ts or src/main.js
+    let mainContent = `import { createApp } from 'vue';
 import './style.${styleExt}';
 import App from './App.vue';
 import router from './router';
 `;
 
     if (stateManager === 'pinia') {
-      mainTs += `import { pinia } from './store';
+      mainContent += `import { pinia } from './store';
 `;
     }
 
-    mainTs += `
+    mainContent += `
 const app = createApp(App);
 app.use(router);
 `;
 
     if (stateManager === 'pinia') {
-      mainTs += `app.use(pinia);
+      mainContent += `app.use(pinia);
 `;
     }
 
-    mainTs += `app.mount('#app');
+    mainContent += `app.mount('#app');
 `;
 
-    await fs.writeFile(path.join(projectPath, 'src', 'main.ts'), mainTs, 'utf-8');
+    await fs.writeFile(path.join(projectPath, 'src', `main${ext}`), mainContent, 'utf-8');
 
-    // src/router/index.ts
+    // src/router/index.ts or src/router/index.js
     await fs.writeFile(
-      path.join(projectPath, 'src', 'router', 'index.ts'),
+      path.join(projectPath, 'src', 'router', `index${ext}`),
       `import { createRouter, createWebHistory } from 'vue-router';
 import Home from '../pages/Home.vue';
 import About from '../pages/About.vue';
@@ -258,7 +273,7 @@ export default router;
     // src/App.vue
     await fs.writeFile(
       path.join(projectPath, 'src', 'App.vue'),
-      `<script setup lang="ts">
+      `<script setup${scriptLang}>
 </script>
 
 <template>
@@ -287,10 +302,10 @@ ${getAppStyles(styleType, 'vue')}
       'utf-8'
     );
 
-    // src/pages/Home.vue (根据状态管理生成不同内容)
+    // src/pages/Home.vue
     let homeVue = '';
     if (stateManager === 'pinia') {
-      homeVue = `<script setup lang="ts">
+      homeVue = `<script setup${scriptLang}>
 import { useCounterStore } from '../store/counter';
 import { storeToRefs } from 'pinia';
 
@@ -331,7 +346,7 @@ ${getPageStyles(styleType)}
 </style>
 `;
     } else {
-      homeVue = `<script setup lang="ts">
+      homeVue = `<script setup${scriptLang}>
 import { ref } from 'vue';
 
 const count = ref(0);
@@ -372,16 +387,17 @@ ${getPageStyles(styleType)}
     await fs.writeFile(path.join(projectPath, 'src', 'pages', 'Home.vue'), homeVue, 'utf-8');
 
     // src/pages/About.vue
+    const aboutTypeAnnotation = useTypeScript ? '<string>' : '';
     await fs.writeFile(
       path.join(projectPath, 'src', 'pages', 'About.vue'),
-      `<script setup lang="ts">
+      `<script setup${scriptLang}>
 import { ref, onMounted } from 'vue';
 // 引用 shared 包中的工具函数
 import { formatDate, sleep } from 'shared';
 // 引用 ui 包中的组件
 import { MyButton } from 'ui';
 
-const date = ref<string>('');
+const date = ref${aboutTypeAnnotation}('');
 
 // 按钮点击处理函数
 const handlePrimaryClick = () => {
@@ -437,16 +453,9 @@ ${getPageStyles(styleType)}
 
     // 根据打包工具生成配置文件
     if (bundler === 'vite') {
-      // src/vite-env.d.ts
+      // vite.config.ts or vite.config.js
       await fs.writeFile(
-        path.join(projectPath, 'src', 'vite-env.d.ts'),
-        getViteEnvDts('vue'),
-        'utf-8'
-      );
-
-      // vite.config.ts
-      await fs.writeFile(
-        path.join(projectPath, 'vite.config.ts'),
+        path.join(projectPath, `vite.config.${useTypeScript ? 'ts' : 'js'}`),
         `import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import legacy from '@vitejs/plugin-legacy';
@@ -492,87 +501,130 @@ export default defineConfig({
     await fs.ensureDir(path.join(projectPath, 'packages'));
 
     // 创建 shared 包
-    await createSharedPackage(projectPath);
+    await createSharedPackage(projectPath, useTypeScript);
 
     // 创建 ui 包 (Vue 版本)
-    await createVueUiPackage(projectPath);
+    await createVueUiPackage(projectPath, useTypeScript);
+
+    // 类型声明文件（TypeScript 项目需要）
+    if (useTypeScript) {
+      if (bundler === 'vite') {
+        // Vite 项目使用 vite-env.d.ts（包含 Vite 特有的类型引用）
+        await fs.writeFile(
+          path.join(projectPath, 'src', 'vite-env.d.ts'),
+          getViteEnvDts('vue'),
+          'utf-8'
+        );
+      } else {
+        // 非 Vite 项目使用 global.d.ts（通用类型声明）
+        await fs.writeFile(
+          path.join(projectPath, 'src', 'global.d.ts'),
+          getGlobalTypeDeclarations('vue'),
+          'utf-8'
+        );
+      }
+    }
   },
 
-  getDependencies: (styleType: StyleType = 'css', stateManager: StateManagerType = 'pinia', httpClient: HttpClientType = 'axios', bundler: BundlerType = 'vite') => {
+  getDependencies: (styleType: StyleType = 'css', stateManager: StateManagerType = 'pinia', httpClient: HttpClientType = 'axios', bundler: BundlerType = 'vite', useTypeScript: boolean = true) => {
     const deps: {
       dependencies: Record<string, string>;
       devDependencies: Record<string, string>;
     } = {
       dependencies: {
-        vue: '^3.4.15',
-        'vue-router': '^4.3.0',
+        vue: FRAMEWORK_VERSIONS.vue,
+        'vue-router': FRAMEWORK_VERSIONS['vue-router'],
         // Monorepo workspace 包引用
         shared: 'workspace:*',
         ui: 'workspace:*',
       },
-      devDependencies: {
-        typescript: '^5.3.3',
-      },
+      devDependencies: {},
     };
+
+    // TypeScript 相关依赖
+    if (useTypeScript) {
+      deps.devDependencies['typescript'] = TS_VERSIONS.typescript;
+    }
 
     // 打包工具相关依赖
     if (bundler === 'vite') {
-      deps.devDependencies['vite'] = '^5.0.0';
-      deps.devDependencies['@vitejs/plugin-vue'] = '^5.0.3';
-      deps.devDependencies['@vitejs/plugin-legacy'] = '^5.3.0';
-      deps.devDependencies['vue-tsc'] = '^2.0.0';
-      deps.devDependencies['autoprefixer'] = '^10.4.17';
+      deps.devDependencies['vite'] = BUNDLER_VERSIONS.vite;
+      deps.devDependencies['@vitejs/plugin-vue'] = BUNDLER_VERSIONS['@vitejs/plugin-vue'];
+      deps.devDependencies['@vitejs/plugin-legacy'] = BUNDLER_VERSIONS['@vitejs/plugin-legacy'];
+      deps.devDependencies['autoprefixer'] = STYLE_VERSIONS.autoprefixer;
+      if (useTypeScript) {
+        deps.devDependencies['vue-tsc'] = FRAMEWORK_VERSIONS['vue-tsc'];
+      }
     } else if (bundler === 'webpack') {
-      deps.devDependencies['webpack'] = '^5.98.0';
-      deps.devDependencies['webpack-cli'] = '^6.0.1';
-      deps.devDependencies['webpack-dev-server'] = '^5.2.3';
-      deps.devDependencies['html-webpack-plugin'] = '^5.6.0';
-      deps.devDependencies['ts-loader'] = '^9.5.1';
-      deps.devDependencies['vue-loader'] = '^17.4.2';
-      deps.devDependencies['@vue/compiler-sfc'] = '^3.4.0';
-      deps.devDependencies['css-loader'] = '^7.1.2';
-      deps.devDependencies['style-loader'] = '^4.0.0';
-      deps.devDependencies['mini-css-extract-plugin'] = '^2.9.2';
-      deps.devDependencies['autoprefixer'] = '^10.4.21';
-      deps.devDependencies['postcss-loader'] = '^8.1.1';
+      deps.devDependencies['webpack'] = BUNDLER_VERSIONS.webpack;
+      deps.devDependencies['webpack-cli'] = BUNDLER_VERSIONS['webpack-cli'];
+      deps.devDependencies['webpack-dev-server'] = BUNDLER_VERSIONS['webpack-dev-server'];
+      deps.devDependencies['html-webpack-plugin'] = BUNDLER_VERSIONS['html-webpack-plugin'];
+      deps.devDependencies['vue-loader'] = FRAMEWORK_VERSIONS['vue-loader'];
+      deps.devDependencies['@vue/compiler-sfc'] = FRAMEWORK_VERSIONS['@vue/compiler-sfc'];
+      deps.devDependencies['css-loader'] = BUNDLER_VERSIONS['css-loader'];
+      deps.devDependencies['style-loader'] = BUNDLER_VERSIONS['style-loader'];
+      deps.devDependencies['mini-css-extract-plugin'] = BUNDLER_VERSIONS['mini-css-extract-plugin'];
+      deps.devDependencies['css-minimizer-webpack-plugin'] = BUNDLER_VERSIONS['css-minimizer-webpack-plugin'];
+      deps.devDependencies['autoprefixer'] = STYLE_VERSIONS.autoprefixer;
+      deps.devDependencies['postcss-loader'] = STYLE_VERSIONS['postcss-loader'];
+      // 图片压缩
+      deps.devDependencies['image-minimizer-webpack-plugin'] = BUNDLER_VERSIONS['image-minimizer-webpack-plugin'];
+      // Gzip 压缩
+      deps.devDependencies['compression-webpack-plugin'] = BUNDLER_VERSIONS['compression-webpack-plugin'];
+      // Babel
+      deps.devDependencies['@babel/core'] = BABEL_VERSIONS['@babel/core'];
+      deps.devDependencies['babel-loader'] = BABEL_VERSIONS['babel-loader'];
+      deps.devDependencies['@babel/preset-env'] = BABEL_VERSIONS['@babel/preset-env'];
+      deps.devDependencies['@babel/plugin-proposal-decorators'] = BABEL_VERSIONS['@babel/plugin-proposal-decorators'];
+      deps.devDependencies['@babel/plugin-transform-class-properties'] = BABEL_VERSIONS['@babel/plugin-transform-class-properties'];
+      deps.devDependencies['@babel/plugin-transform-runtime'] = BABEL_VERSIONS['@babel/plugin-transform-runtime'];
+      deps.devDependencies['@babel/runtime'] = BABEL_VERSIONS['@babel/runtime'];
+      // TypeScript preset（仅 TS 项目）
+      if (useTypeScript) {
+        deps.devDependencies['@babel/preset-typescript'] = BABEL_VERSIONS['@babel/preset-typescript'];
+      }
     }
 
     // Pinia 状态管理
     if (stateManager === 'pinia') {
-      deps.dependencies['pinia'] = '^2.1.7';
+      deps.dependencies['pinia'] = STATE_MANAGER_VERSIONS.pinia;
     }
 
     // HTTP 请求库依赖
     if (httpClient === 'axios') {
-      deps.dependencies['axios'] = '^1.6.0';
+      deps.dependencies['axios'] = HTTP_CLIENT_VERSIONS.axios;
     }
 
     if (styleType === 'less') {
-      deps.devDependencies['less'] = '^4.2.0';
+      deps.devDependencies['less'] = STYLE_VERSIONS.less;
       if (bundler === 'webpack') {
-        deps.devDependencies['less-loader'] = '^12.2.0';
+        deps.devDependencies['less-loader'] = STYLE_VERSIONS['less-loader'];
       }
     } else if (styleType === 'scss') {
-      deps.devDependencies['sass'] = '^1.70.0';
+      deps.devDependencies['sass'] = STYLE_VERSIONS.sass;
       if (bundler === 'webpack') {
-        deps.devDependencies['sass-loader'] = '^14.1.0';
+        deps.devDependencies['sass-loader'] = STYLE_VERSIONS['sass-loader'];
       }
     }
 
     return deps;
   },
 
-  getScripts: (bundler: BundlerType = 'vite'): Record<string, string> => {
+  getScripts: (bundler: BundlerType = 'vite', useTypeScript: boolean = true): Record<string, string> => {
     if (bundler === 'webpack') {
-      return {
+      const scripts: Record<string, string> = {
         dev: 'webpack serve --mode development',
         build: 'webpack --mode production',
-        typecheck: 'vue-tsc --noEmit',
       };
+      if (useTypeScript) {
+        scripts['typecheck'] = 'vue-tsc --noEmit';
+      }
+      return scripts;
     }
     return {
       dev: 'vite',
-      build: 'vue-tsc && vite build',
+      build: useTypeScript ? 'vue-tsc --noEmit && vite build' : 'vite build',
       preview: 'vite preview',
     };
   },

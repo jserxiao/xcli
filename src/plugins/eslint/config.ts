@@ -2,39 +2,40 @@ import type { PluginContext } from '../../types/index.js';
 
 /**
  * React ESLint 配置
+ * 包含 react-hooks 和 react-refresh 规则
  */
 export function getReactEslintConfig(): string {
   return `import js from '@eslint/js';
+import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import prettierConfig from 'eslint-config-prettier';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
 
 export default tseslint.config(
-  js.configs.recommended,
-  ...tseslint.configs.recommended,
-  prettierConfig,
+  { ignores: ['dist'] },
   {
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    files: ['**/*.{ts,tsx}'],
     languageOptions: {
-      parserOptions: {
-        project: true,
-        ecmaFeatures: {
-          jsx: true,
-        },
-      },
-      globals: {
-        console: 'readonly',
-        window: 'readonly',
-        document: 'readonly',
-      },
+      ecmaVersion: 2020,
+      globals: globals.browser,
+    },
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
     },
     rules: {
+      ...reactHooks.configs.recommended.rules,
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowConstantExport: true },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
-  {
-    ignores: ['dist/**', 'node_modules/**', '*.config.js', '*.config.ts'],
-  }
+  prettierConfig,
 );
 `;
 }
@@ -44,33 +45,25 @@ export default tseslint.config(
  */
 export function getVueEslintConfig(): string {
   return `import js from '@eslint/js';
+import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import prettierConfig from 'eslint-config-prettier';
 
 export default tseslint.config(
-  js.configs.recommended,
-  ...tseslint.configs.recommended,
-  prettierConfig,
+  { ignores: ['dist'] },
   {
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    files: ['**/*.{ts,tsx,vue}'],
     languageOptions: {
-      parserOptions: {
-        project: true,
-      },
-      globals: {
-        console: 'readonly',
-        window: 'readonly',
-        document: 'readonly',
-      },
+      ecmaVersion: 2020,
+      globals: globals.browser,
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
-  {
-    ignores: ['dist/**', 'node_modules/**', '*.config.js', '*.config.ts'],
-  }
+  prettierConfig,
 );
 `;
 }
@@ -80,32 +73,28 @@ export default tseslint.config(
  */
 export function getLibraryEslintConfig(): string {
   return `import js from '@eslint/js';
+import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import prettierConfig from 'eslint-config-prettier';
 
 export default tseslint.config(
-  js.configs.recommended,
-  ...tseslint.configs.recommended,
-  prettierConfig,
+  { ignores: ['dist'] },
   {
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    files: ['**/*.ts'],
     languageOptions: {
-      parserOptions: {
-        project: true,
-      },
+      ecmaVersion: 2020,
       globals: {
+        ...globals.node,
         console: 'readonly',
-        process: 'readonly',
       },
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
-  {
-    ignores: ['dist/**', 'node_modules/**', '*.config.js', '*.config.ts'],
-  }
+  prettierConfig,
 );
 `;
 }

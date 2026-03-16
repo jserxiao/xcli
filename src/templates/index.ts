@@ -106,7 +106,8 @@ export function getProjectDependencies(
   styleType: StyleType = 'less',
   stateManager: StateManagerType = 'none',
   httpClient: HttpClientType = 'axios',
-  selectedPlugins: string[] = []
+  selectedPlugins: string[] = [],
+  useTypeScript: boolean = true
 ) {
   const template = getTemplate(projectType);
   if (!template) {
@@ -117,10 +118,10 @@ export function getProjectDependencies(
 
   // 如果模板支持样式和状态管理参数
   if (projectType === 'react') {
-    return reactTemplate.getDependencies(styleType, stateManager, httpClient, bundler);
+    return reactTemplate.getDependencies(styleType, stateManager, httpClient, bundler, useTypeScript);
   }
   if (projectType === 'vue') {
-    return vueTemplate.getDependencies(styleType, stateManager, httpClient, bundler);
+    return vueTemplate.getDependencies(styleType, stateManager, httpClient, bundler, useTypeScript);
   }
 
   return template.getDependencies();
@@ -129,7 +130,7 @@ export function getProjectDependencies(
 /**
  * 获取项目的脚本
  */
-export function getProjectScripts(projectType: ProjectType, selectedPlugins: string[] = []) {
+export function getProjectScripts(projectType: ProjectType, selectedPlugins: string[] = [], useTypeScript: boolean = true) {
   const template = getTemplate(projectType);
   if (!template) {
     return {};
@@ -139,7 +140,7 @@ export function getProjectScripts(projectType: ProjectType, selectedPlugins: str
 
   // React/Vue 模板支持打包工具参数
   if (projectType === 'react' || projectType === 'vue') {
-    return template.getScripts(bundler);
+    return template.getScripts(bundler, useTypeScript);
   }
 
   return template.getScripts();

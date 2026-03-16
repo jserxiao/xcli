@@ -81,7 +81,7 @@ export function getPluginChoices() {
     plugins: plugins
       .filter((p) => p.category === category)
       .map((p) => ({
-        name: p.name,
+        name: p.displayName,
         value: p.name,
         checked: p.defaultEnabled,
       })),

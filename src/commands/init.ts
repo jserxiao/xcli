@@ -155,6 +155,33 @@ async function getProjectConfig(
     httpClient = httpAnswer.httpClient as HttpClientType;
   }
 
+  // 打包工具选择（仅 React/Vue 项目）
+  let bundler: BundlerType = 'vite';
+  if (projectType === 'react' || projectType === 'vue') {
+    const bundlerAnswer = await inquirer.prompt({
+      type: 'list',
+      name: 'bundler',
+      message: '选择打包工具:',
+      choices: [
+        { name: 'Vite (推荐)', value: 'vite' },
+        { name: 'Webpack', value: 'webpack' },
+        { name: 'Rollup', value: 'rollup' },
+        { name: '无打包工具', value: 'none' },
+      ],
+      default: options.bundler || 'vite',
+    });
+    bundler = bundlerAnswer.bundler as BundlerType;
+  }
+
+  // TypeScript 选择
+  const tsAnswer = await inquirer.prompt({
+    type: 'confirm',
+    name: 'useTypeScript',
+    message: '使用 TypeScript?',
+    default: true,
+  });
+  const useTypeScript = tsAnswer.useTypeScript as boolean;
+
   // 包管理器选择
   const packageManagerAnswer = await inquirer.prompt({
     type: 'list',
@@ -169,16 +196,39 @@ async function getProjectConfig(
   });
 
   // 插件选择（按类别分组）
+  // 注意：React/Vue 项目已单独选择打包工具，不需要再选择 bundler 类别插件
+  // TypeScript 也是单独选择，不需要在插件列表中显示
   const pluginQuestions: DistinctQuestion[] = [];
   const pluginChoices = getPluginChoices();
 
+  // 排除已经单独选择的插件
+  const excludedPlugins: string[] = ['typescript']; // TypeScript 已单独选择
+  
+  // React/Vue 项目打包工具已单独选择，排除 bundler 类别
+  const excludeBundlerCategory = projectType === 'react' || projectType === 'vue';
+
   for (const { name, plugins: categoryPlugins } of pluginChoices) {
-    if (categoryPlugins.length > 0) {
+    // 跳过 bundler 类别（React/Vue 项目已单独选择打包工具）
+    if (name === '构建打包' && excludeBundlerCategory) {
+      continue;
+    }
+    
+    // 过滤掉排除的插件
+    const filteredPlugins = categoryPlugins.filter(p => !excludedPlugins.includes(p.value));
+    
+    if (filteredPlugins.length > 0) {
+      // 获取默认选中的插件值
+      const defaultSelected = filteredPlugins
+        .filter(p => p.checked)
+        .map(p => p.value);
+      
       pluginQuestions.push({
         type: 'checkbox',
         name: `plugins_${name}`,
-        message: `选择 ${name} 插件:`,
-        choices: categoryPlugins,
+        message: `选择 ${name} 插件 (空格选择，回车确认):`,
+        choices: filteredPlugins,
+        default: defaultSelected,
+        loop: false,
       });
     }
   }
@@ -186,7 +236,17 @@ async function getProjectConfig(
   const pluginAnswers = await inquirer.prompt(pluginQuestions);
 
   // 合并所有选择的插件
-  const selectedPlugins = Object.values(pluginAnswers).flat() as string[];
+  let selectedPlugins = Object.values(pluginAnswers).flat() as string[];
+  
+  // 如果使用了 TypeScript，自动添加 typescript 插件
+  if (useTypeScript) {
+    selectedPlugins = ['typescript', ...selectedPlugins];
+  }
+  
+  // React/Vue 项目，根据选择的打包工具自动添加对应插件
+  if ((projectType === 'react' || projectType === 'vue') && bundler !== 'none') {
+    selectedPlugins = [bundler, ...selectedPlugins];
+  }
 
   // 其他配置
   const otherQuestions: DistinctQuestion[] = [
@@ -222,8 +282,8 @@ async function getProjectConfig(
     styleType,
     stateManager,
     httpClient,
-    bundler: (projectType === 'react' || projectType === 'vue') ? (options.bundler || 'vite') as BundlerType : 'none',
-    useTypeScript: true,
+    bundler,
+    useTypeScript,
     plugins: selectedPlugins,
     packageManager: packageManagerAnswer.packageManager as 'npm' | 'yarn' | 'pnpm',
     initGit: otherAnswers.initGit as boolean,
@@ -344,7 +404,7 @@ export async function init(projectName: string | undefined, options: CLIOptions)
   try {
     const generator = new FileGenerator(context);
     // 对于 React/Vue 项目，打包工具配置已在模板中生成，需要过滤掉
-    const bundlerFiles = ['webpack.config.cjs', 'vite.config.ts', 'rollup.config.js'];
+    const bundlerFiles = ['webpack.config.cjs', 'vite.config.ts', 'vite.config.js', 'rollup.config.js'];
     const filteredPlugins = selectedPlugins.map((plugin) => {
       if ((config.projectType === 'react' || config.projectType === 'vue') &&
           (plugin.name === 'webpack' || plugin.name === 'vite' || plugin.name === 'rollup')) {
@@ -367,15 +427,16 @@ export async function init(projectName: string | undefined, options: CLIOptions)
   spinner.start('生成 package.json...');
   try {
     // 合并项目模板的依赖和脚本
-    const templateDeps = getProjectDependencies(config.projectType, config.styleType, config.stateManager, config.httpClient, config.plugins);
-    const templateScripts = getProjectScripts(config.projectType, config.plugins);
+    const templateDeps = getProjectDependencies(config.projectType, config.styleType, config.stateManager, config.httpClient, config.plugins, config.useTypeScript);
+    const templateScripts = getProjectScripts(config.projectType, config.plugins, config.useTypeScript);
 
     await generatePackageJson(
       projectPath,
       config,
       selectedPlugins,
       templateDeps,
-      templateScripts
+      templateScripts,
+      context
     );
     spinner.succeed('package.json 生成完成');
   } catch (error) {

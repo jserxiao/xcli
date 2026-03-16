@@ -28,6 +28,16 @@ export const BUNDLER_VERSIONS = {
   'style-loader': '^4.0.0',
   'mini-css-extract-plugin': '^2.9.2',
   'webpack-bundle-analyzer': '^4.10.2',
+  'css-minimizer-webpack-plugin': '^7.0.0',
+
+  // Webpack - SVG as Component
+  '@svgr/webpack': '^8.1.0',
+
+  // Webpack - 图片压缩 (使用 image-minimizer-webpack-plugin 替代已弃用的 image-webpack-loader)
+  'image-minimizer-webpack-plugin': '^5.0.0',
+
+  // Webpack - Gzip/Brotli 压缩
+  'compression-webpack-plugin': '^11.1.0',
 
   // Rollup
   rollup: '^4.9.0',
@@ -96,11 +106,16 @@ export const LINTER_VERSIONS = {
   '@eslint/js': '^9.18.0',
   'eslint-config-prettier': '^10.0.1',
 
+  // React ESLint 插件
+  'eslint-plugin-react-hooks': '^7.0.1',
+  'eslint-plugin-react-refresh': '^0.4.14',
+  globals: '^15.11.0',
+
   // Stylelint
   stylelint: '^16.2.0',
-  'stylelint-config-standard': '^36.0.0',
-  'stylelint-config-standard-scss': '^13.0.0',
-  'stylelint-order': '^6.0.4',
+  'stylelint-config-standard': '^38.0.0',
+  'stylelint-config-standard-scss': '^15.0.0',
+  'stylelint-order': '^8.1.1',
   'stylelint-prettier': '^5.0.0',
   'postcss-less': '^6.0.0',
 
@@ -111,9 +126,9 @@ export const LINTER_VERSIONS = {
 // ============ Git 工具 ============
 export const GIT_VERSIONS = {
   husky: '^9.0.0',
-  'lint-staged': '^15.2.0',
-  '@commitlint/cli': '^18.4.4',
-  '@commitlint/config-conventional': '^18.4.4',
+  'lint-staged': '^15.5.0',
+  '@commitlint/cli': '^19.8.1',
+  '@commitlint/config-conventional': '^19.8.1',
 } as const;
 
 // ============ 测试工具 ============
@@ -137,4 +152,17 @@ export const TEST_VERSIONS = {
 export const TS_VERSIONS = {
   typescript: '^5.3.3',
   '@types/node': '^20.11.0',
+} as const;
+
+// ============ Babel 相关 ============
+export const BABEL_VERSIONS = {
+  '@babel/core': '^7.24.0',
+  '@babel/preset-env': '^7.24.0',
+  '@babel/preset-react': '^7.24.0',
+  '@babel/preset-typescript': '^7.24.0',
+  'babel-loader': '^9.1.3',
+  '@babel/plugin-proposal-decorators': '^7.24.0',
+  '@babel/plugin-transform-class-properties': '^7.24.0',
+  '@babel/plugin-transform-runtime': '^7.24.0',
+  '@babel/runtime': '^7.24.0',
 } as const;

@@ -149,11 +149,121 @@ ignore-dep-scripts=true
 }
 
 /**
+ * 获取全局类型声明内容（通用资源类型声明）
+ * @param framework 框架类型
+ */
+export function getGlobalTypeDeclarations(framework: 'react' | 'vue'): string {
+  const base = `// 全局类型声明文件
+// 资源文件类型声明
+
+// 普通 SVG 资源导入
+declare module '*.svg' {
+  const content: string;
+  export default content;
+}
+
+// 图片资源导入
+declare module '*.png' {
+  const content: string;
+  export default content;
+}
+
+declare module '*.jpg' {
+  const content: string;
+  export default content;
+}
+
+declare module '*.jpeg' {
+  const content: string;
+  export default content;
+}
+
+declare module '*.gif' {
+  const content: string;
+  export default content;
+}
+
+declare module '*.webp' {
+  const content: string;
+  export default content;
+}
+
+// CSS 模块声明
+declare module '*.module.css' {
+  const classes: { readonly [key: string]: string };
+  export default classes;
+}
+
+declare module '*.module.less' {
+  const classes: { readonly [key: string]: string };
+  export default classes;
+}
+
+declare module '*.module.scss' {
+  const classes: { readonly [key: string]: string };
+  export default classes;
+}
+`;
+
+  if (framework === 'vue') {
+    return base + `
+// Vue 单文件组件声明
+declare module '*.vue' {
+  import type { DefineComponent } from 'vue';
+  const component: DefineComponent<{}, {}, any>;
+  export default component;
+}
+`;
+  }
+
+  return base;
+}
+
+/**
  * 获取 vite-env.d.ts 内容
  * @param framework 框架类型
  */
 export function getViteEnvDts(framework: 'react' | 'vue'): string {
   const base = `/// <reference types="vite/client" />
+
+// SVG as Component 类型声明（使用 ?react 后缀）
+declare module '*.svg?react' {
+  import React from 'react';
+  const SVGComponent: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
+  export default SVGComponent;
+}
+
+// 普通 SVG 资源导入
+declare module '*.svg' {
+  const content: string;
+  export default content;
+}
+
+// 图片资源导入
+declare module '*.png' {
+  const content: string;
+  export default content;
+}
+
+declare module '*.jpg' {
+  const content: string;
+  export default content;
+}
+
+declare module '*.jpeg' {
+  const content: string;
+  export default content;
+}
+
+declare module '*.gif' {
+  const content: string;
+  export default content;
+}
+
+declare module '*.webp' {
+  const content: string;
+  export default content;
+}
 `;
 
   if (framework === 'vue') {
@@ -246,7 +356,8 @@ export function getSharedTsConfig(): Record<string, unknown> {
 export async function createRootConfigFiles(
   projectPath: string,
   framework: 'react' | 'vue',
-  bundler: BundlerType = 'vite'
+  bundler: BundlerType = 'vite',
+  useTypeScript: boolean = true
 ): Promise<void> {
   // .gitignore
   await fs.writeFile(
@@ -269,12 +380,14 @@ export async function createRootConfigFiles(
     'utf-8'
   );
 
-  // tsconfig.json
-  await fs.writeFile(
-    path.join(projectPath, 'tsconfig.json'),
-    JSON.stringify(getBaseTsConfig(framework, bundler), null, 2),
-    'utf-8'
-  );
+  // tsconfig.json (仅 TypeScript 项目)
+  if (useTypeScript) {
+    await fs.writeFile(
+      path.join(projectPath, 'tsconfig.json'),
+      JSON.stringify(getBaseTsConfig(framework, bundler), null, 2),
+      'utf-8'
+    );
+  }
 
   // public/vite.svg
   await fs.ensureDir(path.join(projectPath, 'public'));

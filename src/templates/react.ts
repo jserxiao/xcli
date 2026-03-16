@@ -11,6 +11,7 @@ import {
   createSharedPackage,
   createReactUiPackage,
   getViteEnvDts,
+  getGlobalTypeDeclarations,
   // 状态管理模板
   getReduxStoreIndex,
   getReduxCounterSlice,
@@ -20,40 +21,61 @@ import {
   getMobXStoreIndex,
 } from './shared.js';
 import { axiosPlugin, fetchPlugin } from '../plugins/http-client/index.js';
+import {
+  BUNDLER_VERSIONS,
+  FRAMEWORK_VERSIONS,
+  STYLE_VERSIONS,
+  STATE_MANAGER_VERSIONS,
+  HTTP_CLIENT_VERSIONS,
+  TS_VERSIONS,
+  BABEL_VERSIONS,
+} from '../constants/index.js';
+
+/**
+ * 获取文件扩展名（根据是否使用 TypeScript）
+ */
+function getExt(useTypeScript: boolean, isJsx: boolean = true): string {
+  if (useTypeScript) {
+    return isJsx ? '.tsx' : '.ts';
+  }
+  return isJsx ? '.jsx' : '.js';
+}
 
 /**
  * 创建 Redux store 文件
  */
-async function createReduxStore(projectPath: string, bundler: BundlerType = 'vite') {
+async function createReduxStore(projectPath: string, bundler: BundlerType = 'vite', useTypeScript: boolean = true) {
   const storePath = path.join(projectPath, 'src', 'store');
   await fs.ensureDir(storePath);
   await fs.ensureDir(path.join(storePath, 'middleware'));
 
-  // store/index.ts
+  const ext = getExt(useTypeScript, false);
+
+  // store/index.ts or store/index.js
   await fs.writeFile(
-    path.join(storePath, 'index.ts'),
-    getReduxStoreIndex(bundler),
+    path.join(storePath, `index${ext}`),
+    getReduxStoreIndex(bundler, useTypeScript),
     'utf-8'
   );
 
-  // store/counterSlice.ts
+  // store/counterSlice.ts or store/counterSlice.js
   await fs.writeFile(
-    path.join(storePath, 'counterSlice.ts'),
-    getReduxCounterSlice(),
+    path.join(storePath, `counterSlice${ext}`),
+    getReduxCounterSlice(useTypeScript),
     'utf-8'
   );
 
-  // store/apiSlice.ts
+  // store/apiSlice.ts or store/apiSlice.js
   await fs.writeFile(
-    path.join(storePath, 'apiSlice.ts'),
-    getReduxApiSlice(),
+    path.join(storePath, `apiSlice${ext}`),
+    getReduxApiSlice(useTypeScript),
     'utf-8'
   );
 
-  // store/middleware/logger.ts
+  // store/middleware/logger.ts or store/middleware/logger.js
   await fs.writeFile(
-    path.join(storePath, 'middleware', 'logger.ts'),
-    getReduxLoggerMiddleware(bundler),
+    path.join(storePath, 'middleware', `logger${ext}`),
+    getReduxLoggerMiddleware(bundler, useTypeScript),
     'utf-8'
   );
 }
@@ -61,21 +83,23 @@ async function createReduxStore(projectPath: string, bundler: BundlerType = 'vit
 /**
  * 创建 MobX store 文件
  */
-async function createMobXStore(projectPath: string) {
+async function createMobXStore(projectPath: string, useTypeScript: boolean = true) {
   const storePath = path.join(projectPath, 'src', 'store');
   await fs.ensureDir(storePath);
 
-  // store/CounterStore.ts
+  const ext = getExt(useTypeScript, false);
+
+  // store/CounterStore.ts or store/CounterStore.js
   await fs.writeFile(
-    path.join(storePath, 'CounterStore.ts'),
-    getMobXCounterStore(),
+    path.join(storePath, `CounterStore${ext}`),
+    getMobXCounterStore(useTypeScript),
     'utf-8'
   );
 
-  // store/index.ts
+  // store/index.ts or store/index.js
   await fs.writeFile(
-    path.join(storePath, 'index.ts'),
-    getMobXStoreIndex(),
+    path.join(storePath, `index${ext}`),
+    getMobXStoreIndex(useTypeScript),
     'utf-8'
   );
 }
@@ -89,12 +113,14 @@ export const reactTemplate = {
   description: 'React 前端项目 (pnpm monorepo)',
 
   createStructure: async (projectPath: string, context: PluginContext) => {
-    const { styleType = 'css', stateManager = 'none', httpClient = 'axios', bundler = 'vite', selectedPlugins = [] } = context;
+    const { styleType = 'css', stateManager = 'none', httpClient = 'axios', bundler = 'vite', selectedPlugins = [], useTypeScript = true } = context;
     const styleExt = getStyleExt(styleType);
+    const ext = getExt(useTypeScript, false);
+    const jsxExt = getExt(useTypeScript, true);
 
     // ============ 根目录文件 ============
 
-    // 根据打包工具生成不同的 package.json
+    // 根据打包工具和 TypeScript 设置生成不同的 package.json
     const basePackageJson: Record<string, any> = {
       name: context.projectName,
       version: '1.0.0',
@@ -113,11 +139,11 @@ export const reactTemplate = {
     if (bundler === 'vite') {
       basePackageJson.scripts = {
         dev: 'vite',
-        build: 'tsc && vite build',
+        build: useTypeScript ? 'tsc && vite build' : 'vite build',
         preview: 'vite preview',
-        lint: 'eslint src --ext .ts,.tsx',
-        'lint:fix': 'eslint src --ext .ts,.tsx --fix',
-        format: 'prettier --write "src/**/*.{ts,tsx,css,scss,less}"',
+        lint: `eslint src --ext ${useTypeScript ? '.ts,.tsx' : '.js,.jsx'}`,
+        'lint:fix': `eslint src --ext ${useTypeScript ? '.ts,.tsx' : '.js,.jsx'} --fix`,
+        format: `prettier --write "src/**/*{${useTypeScript ? '.ts,.tsx' : '.js,.jsx'},css,scss,less}"`,
         clean: 'rm -rf dist node_modules',
       };
       basePackageJson.devDependencies = {
@@ -129,9 +155,9 @@ export const reactTemplate = {
       basePackageJson.scripts = {
         dev: 'webpack serve --mode development',
         build: 'webpack --mode production',
-        lint: 'eslint src --ext .ts,.tsx',
-        'lint:fix': 'eslint src --ext .ts,.tsx --fix',
-        format: 'prettier --write "src/**/*.{ts,tsx,css,scss,less}"',
+        lint: `eslint src --ext ${useTypeScript ? '.ts,.tsx' : '.js,.jsx'}`,
+        'lint:fix': `eslint src --ext ${useTypeScript ? '.ts,.tsx' : '.js,.jsx'} --fix`,
+        format: `prettier --write "src/**/*{${useTypeScript ? '.ts,.tsx' : '.js,.jsx'},css,scss,less}"`,
         clean: 'rm -rf dist node_modules',
       };
       basePackageJson.devDependencies = {
@@ -139,7 +165,6 @@ export const reactTemplate = {
         'webpack-cli': '^6.0.1',
         'webpack-dev-server': '^5.2.3',
         'html-webpack-plugin': '^5.6.0',
-        'ts-loader': '^9.5.1',
         'css-loader': '^7.1.2',
         'style-loader': '^4.0.0',
         'mini-css-extract-plugin': '^2.9.2',
@@ -153,11 +178,11 @@ export const reactTemplate = {
       // 默认使用 vite 或无打包工具
       basePackageJson.scripts = {
         dev: 'vite',
-        build: 'tsc && vite build',
+        build: useTypeScript ? 'tsc && vite build' : 'vite build',
         preview: 'vite preview',
-        lint: 'eslint src --ext .ts,.tsx',
-        'lint:fix': 'eslint src --ext .ts,.tsx --fix',
-        format: 'prettier --write "src/**/*.{ts,tsx,css,scss,less}"',
+        lint: `eslint src --ext ${useTypeScript ? '.ts,.tsx' : '.js,.jsx'}`,
+        'lint:fix': `eslint src --ext ${useTypeScript ? '.ts,.tsx' : '.js,.jsx'} --fix`,
+        format: `prettier --write "src/**/*{${useTypeScript ? '.ts,.tsx' : '.js,.jsx'},css,scss,less}"`,
         clean: 'rm -rf dist node_modules',
       };
       basePackageJson.devDependencies = {
@@ -175,7 +200,7 @@ export const reactTemplate = {
     );
 
     // 创建通用配置文件
-    await createRootConfigFiles(projectPath, 'react', bundler);
+    await createRootConfigFiles(projectPath, 'react', bundler, useTypeScript);
 
     // ============ src 目录 (主应用源代码) ============
     await createSrcDirectories(projectPath);
@@ -183,9 +208,9 @@ export const reactTemplate = {
 
     // 创建状态管理相关文件
     if (stateManager === 'redux') {
-      await createReduxStore(projectPath, bundler);
+      await createReduxStore(projectPath, bundler, useTypeScript);
     } else if (stateManager === 'mobx') {
-      await createMobXStore(projectPath);
+      await createMobXStore(projectPath, useTypeScript);
     }
 
     // 创建 HTTP 请求相关文件
@@ -193,7 +218,7 @@ export const reactTemplate = {
       await fs.ensureDir(path.join(projectPath, 'src', 'api'));
       const content = axiosPlugin.files![0].content;
       await fs.writeFile(
-        path.join(projectPath, 'src', 'api', 'request.ts'),
+        path.join(projectPath, 'src', 'api', `request${ext}`),
         typeof content === 'function' ? content(context) : content,
         'utf-8'
       );
@@ -201,13 +226,14 @@ export const reactTemplate = {
       await fs.ensureDir(path.join(projectPath, 'src', 'api'));
       const content = fetchPlugin.files![0].content;
       await fs.writeFile(
-        path.join(projectPath, 'src', 'api', 'request.ts'),
+        path.join(projectPath, 'src', 'api', `request${ext}`),
         typeof content === 'function' ? content(context) : content,
         'utf-8'
       );
     }
 
     // index.html
+    const mainFile = useTypeScript ? '/src/main.tsx' : '/src/main.jsx';
     await fs.writeFile(
       path.join(projectPath, 'index.html'),
       `<!DOCTYPE html>
@@ -222,25 +248,25 @@ export const reactTemplate = {
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="${mainFile}"></script>
   </body>
 </html>
 `,
       'utf-8'
     );
 
-    // src/main.tsx (根据状态管理生成不同内容)
-    let mainTsx = `import React from 'react';
+    // src/main.tsx or src/main.jsx
+    let mainContent = `import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.${styleExt}';
 `;
 
     if (stateManager === 'redux') {
-      mainTsx += `import { store } from './store';
+      mainContent += `import { store } from './store';
 import { Provider } from 'react-redux';
 `;
-      mainTsx += `
+      mainContent += `
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Provider store={store}>
@@ -250,7 +276,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 );
 `;
     } else {
-      mainTsx += `
+      mainContent += `
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
@@ -259,11 +285,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 `;
     }
 
-    await fs.writeFile(path.join(projectPath, 'src', 'main.tsx'), mainTsx, 'utf-8');
+    await fs.writeFile(path.join(projectPath, 'src', `main${jsxExt}`), mainContent, 'utf-8');
 
-    // src/router/index.tsx
+    // src/router/index.tsx or src/router/index.jsx
     await fs.writeFile(
-      path.join(projectPath, 'src', 'router', 'index.tsx'),
+      path.join(projectPath, 'src', 'router', `index${jsxExt}`),
       `import { createBrowserRouter } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Home from '../pages/Home';
@@ -291,9 +317,9 @@ export default router;
       'utf-8'
     );
 
-    // src/components/Layout.tsx
+    // src/components/Layout.tsx or Layout.jsx
     await fs.writeFile(
-      path.join(projectPath, 'src', 'components', 'Layout.tsx'),
+      path.join(projectPath, 'src', 'components', `Layout${jsxExt}`),
       `import { NavLink, Outlet } from 'react-router-dom';
 import './Layout.${styleExt}';
 
@@ -327,9 +353,9 @@ export default Layout;
       'utf-8'
     );
 
-    // src/App.tsx
+    // src/App.tsx or App.jsx
     await fs.writeFile(
-      path.join(projectPath, 'src', 'App.tsx'),
+      path.join(projectPath, 'src', `App${jsxExt}`),
       `import { RouterProvider } from 'react-router-dom';
 import router from './router';
 
@@ -349,10 +375,10 @@ export default App;
       'utf-8'
     );
 
-    // src/pages/Home.tsx (根据状态管理生成不同内容)
-    let homeTsx = '';
+    // src/pages/Home.tsx or Home.jsx
+    let homeContent = '';
     if (stateManager === 'redux') {
-      homeTsx = `import { useAppDispatch, useAppSelector } from '../store';
+      homeContent = `import { useAppDispatch, useAppSelector } from '../store';
 import { decrement, increment } from '../store/counterSlice';
 import './Home.${styleExt}';
 
@@ -391,7 +417,7 @@ function Home() {
 export default Home;
 `;
     } else if (stateManager === 'mobx') {
-      homeTsx = `import { observer } from 'mobx-react-lite';
+      homeContent = `import { observer } from 'mobx-react-lite';
 import { counterStore } from '../store';
 import './Home.${styleExt}';
 
@@ -427,7 +453,7 @@ const Home = observer(() => {
 export default Home;
 `;
     } else {
-      homeTsx = `import { useState } from 'react';
+      homeContent = `import { useState } from 'react';
 import './Home.${styleExt}';
 
 function Home() {
@@ -464,7 +490,7 @@ function Home() {
 export default Home;
 `;
     }
-    await fs.writeFile(path.join(projectPath, 'src', 'pages', 'Home.tsx'), homeTsx, 'utf-8');
+    await fs.writeFile(path.join(projectPath, 'src', 'pages', `Home${jsxExt}`), homeContent, 'utf-8');
 
     // src/pages/Home.xxx
     await fs.writeFile(
@@ -473,16 +499,16 @@ export default Home;
       'utf-8'
     );
 
-    // src/pages/About.tsx
+    // src/pages/About.tsx or About.jsx
     await fs.writeFile(
-      path.join(projectPath, 'src', 'pages', 'About.tsx'),
+      path.join(projectPath, 'src', 'pages', `About${jsxExt}`),
       `import { formatDate, sleep } from 'shared';
 import { Button } from 'ui';
 import { useState, useEffect } from 'react';
 import './About.${styleExt}';
 
 function About() {
-  const [date, setDate] = useState<string>('');
+  const [date, setDate] = useState${useTypeScript ? '<string>' : ''}('');
 
   useEffect(() => {
     // 使用 shared 包中的工具函数
@@ -526,16 +552,9 @@ export default About;
 
     // 根据打包工具生成配置文件
     if (bundler === 'vite') {
-      // src/vite-env.d.ts
+      // vite.config.ts or vite.config.js
       await fs.writeFile(
-        path.join(projectPath, 'src', 'vite-env.d.ts'),
-        getViteEnvDts('react'),
-        'utf-8'
-      );
-
-      // vite.config.ts
-      await fs.writeFile(
-        path.join(projectPath, 'vite.config.ts'),
+        path.join(projectPath, `vite.config.${useTypeScript ? 'ts' : 'js'}`),
         `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';
@@ -581,94 +600,138 @@ export default defineConfig({
     await fs.ensureDir(path.join(projectPath, 'packages'));
 
     // 创建 shared 包
-    await createSharedPackage(projectPath);
+    await createSharedPackage(projectPath, useTypeScript);
 
     // 创建 ui 包 (React 版本)
-    await createReactUiPackage(projectPath);
+    await createReactUiPackage(projectPath, useTypeScript);
+
+    // 类型声明文件（TypeScript 项目需要）
+    if (useTypeScript) {
+      if (bundler === 'vite') {
+        // Vite 项目使用 vite-env.d.ts（包含 Vite 特有的类型引用）
+        await fs.writeFile(
+          path.join(projectPath, 'src', 'vite-env.d.ts'),
+          getViteEnvDts('react'),
+          'utf-8'
+        );
+      } else {
+        // 非 Vite 项目使用 global.d.ts（通用类型声明）
+        await fs.writeFile(
+          path.join(projectPath, 'src', 'global.d.ts'),
+          getGlobalTypeDeclarations('react'),
+          'utf-8'
+        );
+      }
+    }
   },
 
-  getDependencies: (styleType: StyleType = 'css', stateManager: StateManagerType = 'none', httpClient: HttpClientType = 'axios', bundler: BundlerType = 'vite') => {
+  getDependencies: (styleType: StyleType = 'css', stateManager: StateManagerType = 'none', httpClient: HttpClientType = 'axios', bundler: BundlerType = 'vite', useTypeScript: boolean = true) => {
     const deps: {
       dependencies: Record<string, string>;
       devDependencies: Record<string, string>;
     } = {
       dependencies: {
-        react: '^18.2.0',
-        'react-dom': '^18.2.0',
-        'react-router-dom': '^6.22.0',
+        react: FRAMEWORK_VERSIONS.react,
+        'react-dom': FRAMEWORK_VERSIONS['react-dom'],
+        'react-router-dom': FRAMEWORK_VERSIONS['react-router-dom'],
         // Monorepo workspace 包引用
         shared: 'workspace:*',
         ui: 'workspace:*',
       },
-      devDependencies: {
-        '@types/react': '^18.2.48',
-        '@types/react-dom': '^18.2.18',
-        typescript: '^5.3.3',
-      },
+      devDependencies: {},
     };
+
+    // TypeScript 相关依赖
+    if (useTypeScript) {
+      deps.devDependencies['@types/react'] = FRAMEWORK_VERSIONS['@types/react'];
+      deps.devDependencies['@types/react-dom'] = FRAMEWORK_VERSIONS['@types/react-dom'];
+      deps.devDependencies['typescript'] = TS_VERSIONS.typescript;
+    }
 
     // 打包工具相关依赖
     if (bundler === 'vite') {
-      deps.devDependencies['vite'] = '^5.0.0';
-      deps.devDependencies['@vitejs/plugin-react'] = '^4.2.1';
-      deps.devDependencies['@vitejs/plugin-legacy'] = '^5.3.0';
-      deps.devDependencies['autoprefixer'] = '^10.4.17';
+      deps.devDependencies['vite'] = BUNDLER_VERSIONS.vite;
+      deps.devDependencies['@vitejs/plugin-react'] = BUNDLER_VERSIONS['@vitejs/plugin-react'];
+      deps.devDependencies['@vitejs/plugin-legacy'] = BUNDLER_VERSIONS['@vitejs/plugin-legacy'];
+      deps.devDependencies['autoprefixer'] = STYLE_VERSIONS.autoprefixer;
     } else if (bundler === 'webpack') {
-      deps.devDependencies['webpack'] = '^5.98.0';
-      deps.devDependencies['webpack-cli'] = '^6.0.1';
-      deps.devDependencies['webpack-dev-server'] = '^5.2.3';
-      deps.devDependencies['html-webpack-plugin'] = '^5.6.0';
-      deps.devDependencies['ts-loader'] = '^9.5.1';
-      deps.devDependencies['css-loader'] = '^7.1.2';
-      deps.devDependencies['style-loader'] = '^4.0.0';
-      deps.devDependencies['mini-css-extract-plugin'] = '^2.9.2';
-      deps.devDependencies['autoprefixer'] = '^10.4.21';
-      deps.devDependencies['postcss-loader'] = '^8.1.1';
+      deps.devDependencies['webpack'] = BUNDLER_VERSIONS.webpack;
+      deps.devDependencies['webpack-cli'] = BUNDLER_VERSIONS['webpack-cli'];
+      deps.devDependencies['webpack-dev-server'] = BUNDLER_VERSIONS['webpack-dev-server'];
+      deps.devDependencies['html-webpack-plugin'] = BUNDLER_VERSIONS['html-webpack-plugin'];
+      deps.devDependencies['css-loader'] = BUNDLER_VERSIONS['css-loader'];
+      deps.devDependencies['style-loader'] = BUNDLER_VERSIONS['style-loader'];
+      deps.devDependencies['mini-css-extract-plugin'] = BUNDLER_VERSIONS['mini-css-extract-plugin'];
+      deps.devDependencies['css-minimizer-webpack-plugin'] = BUNDLER_VERSIONS['css-minimizer-webpack-plugin'];
+      deps.devDependencies['autoprefixer'] = STYLE_VERSIONS.autoprefixer;
+      deps.devDependencies['postcss-loader'] = STYLE_VERSIONS['postcss-loader'];
+      // SVG as Component
+      deps.devDependencies['@svgr/webpack'] = BUNDLER_VERSIONS['@svgr/webpack'];
+      // 图片压缩
+      deps.devDependencies['image-minimizer-webpack-plugin'] = BUNDLER_VERSIONS['image-minimizer-webpack-plugin'];
+      // Gzip 压缩
+      deps.devDependencies['compression-webpack-plugin'] = BUNDLER_VERSIONS['compression-webpack-plugin'];
+      // Babel
+      deps.devDependencies['@babel/core'] = BABEL_VERSIONS['@babel/core'];
+      deps.devDependencies['babel-loader'] = BABEL_VERSIONS['babel-loader'];
+      deps.devDependencies['@babel/preset-env'] = BABEL_VERSIONS['@babel/preset-env'];
+      deps.devDependencies['@babel/preset-react'] = BABEL_VERSIONS['@babel/preset-react'];
+      deps.devDependencies['@babel/plugin-proposal-decorators'] = BABEL_VERSIONS['@babel/plugin-proposal-decorators'];
+      deps.devDependencies['@babel/plugin-transform-class-properties'] = BABEL_VERSIONS['@babel/plugin-transform-class-properties'];
+      deps.devDependencies['@babel/plugin-transform-runtime'] = BABEL_VERSIONS['@babel/plugin-transform-runtime'];
+      deps.devDependencies['@babel/runtime'] = BABEL_VERSIONS['@babel/runtime'];
       // React 热更新
-      deps.devDependencies['@pmmmwh/react-refresh-webpack-plugin'] = '^0.5.15';
-      deps.devDependencies['react-refresh'] = '^0.17.0';
+      deps.devDependencies['@pmmmwh/react-refresh-webpack-plugin'] = FRAMEWORK_VERSIONS['@pmmmwh/react-refresh-webpack-plugin'];
+      deps.devDependencies['react-refresh'] = FRAMEWORK_VERSIONS['react-refresh'];
+      // TypeScript preset（仅 TS 项目）
+      if (useTypeScript) {
+        deps.devDependencies['@babel/preset-typescript'] = BABEL_VERSIONS['@babel/preset-typescript'];
+      }
     }
 
     // 状态管理依赖
     if (stateManager === 'redux') {
-      deps.dependencies['@reduxjs/toolkit'] = '^2.2.0';
-      deps.dependencies['react-redux'] = '^9.1.0';
+      deps.dependencies['@reduxjs/toolkit'] = STATE_MANAGER_VERSIONS['@reduxjs/toolkit'];
+      deps.dependencies['react-redux'] = STATE_MANAGER_VERSIONS['react-redux'];
     } else if (stateManager === 'mobx') {
-      deps.dependencies['mobx'] = '^6.12.0';
-      deps.dependencies['mobx-react-lite'] = '^4.0.5';
+      deps.dependencies['mobx'] = STATE_MANAGER_VERSIONS.mobx;
+      deps.dependencies['mobx-react-lite'] = STATE_MANAGER_VERSIONS['mobx-react-lite'];
     }
 
     // HTTP 请求库依赖
     if (httpClient === 'axios') {
-      deps.dependencies['axios'] = '^1.6.0';
+      deps.dependencies['axios'] = HTTP_CLIENT_VERSIONS.axios;
     }
 
     if (styleType === 'less') {
-      deps.devDependencies['less'] = '^4.2.0';
+      deps.devDependencies['less'] = STYLE_VERSIONS.less;
       if (bundler === 'webpack') {
-        deps.devDependencies['less-loader'] = '^12.2.0';
+        deps.devDependencies['less-loader'] = STYLE_VERSIONS['less-loader'];
       }
     } else if (styleType === 'scss') {
-      deps.devDependencies['sass'] = '^1.70.0';
+      deps.devDependencies['sass'] = STYLE_VERSIONS.sass;
       if (bundler === 'webpack') {
-        deps.devDependencies['sass-loader'] = '^14.1.0';
+        deps.devDependencies['sass-loader'] = STYLE_VERSIONS['sass-loader'];
       }
     }
 
     return deps;
   },
 
-  getScripts: (bundler: BundlerType = 'vite'): Record<string, string> => {
+  getScripts: (bundler: BundlerType = 'vite', useTypeScript: boolean = true): Record<string, string> => {
     if (bundler === 'webpack') {
-      return {
+      const scripts: Record<string, string> = {
         dev: 'webpack serve --mode development',
         build: 'webpack --mode production',
-        typecheck: 'tsc --noEmit',
       };
+      if (useTypeScript) {
+        scripts['typecheck'] = 'tsc --noEmit';
+      }
+      return scripts;
     }
     return {
       dev: 'vite',
-      build: 'tsc && vite build',
+      build: useTypeScript ? 'tsc --noEmit && vite build' : 'vite build',
       preview: 'vite preview',
     };
   },
