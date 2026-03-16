@@ -500,22 +500,29 @@ export function getStyleRules(styleType: StyleType): string {
 
 /**
  * 获取 React 项目的 Babel 规则
+ * @babel/preset-env 会自动读取 .browserslistrc 配置（支持 Chrome 86+）
  */
 function getReactBabelRule(useTypeScript: boolean = true): string {
   const testPattern = useTypeScript ? '/\\.tsx?$/' : '/\\.jsx?$/';
+  // @babel/preset-env 默认会读取 .browserslistrc 或 package.json 中的 browserslist 配置
+  // 无需手动指定 targets，确保与 autoprefixer 使用相同的浏览器兼容目标
   const presets = useTypeScript
     ? `[
             ['@babel/preset-env', {
-              targets: { browsers: ['last 2 versions', '> 1%'] },
+              // 自动读取 .browserslistrc 配置（支持 Chrome 86+）
               modules: false,
+              useBuiltIns: 'usage', // 按需引入 polyfill
+              corejs: 3, // 使用 core-js@3
             }],
             ['@babel/preset-react', { runtime: 'automatic' }],
             '@babel/preset-typescript',
           ]`
     : `[
             ['@babel/preset-env', {
-              targets: { browsers: ['last 2 versions', '> 1%'] },
+              // 自动读取 .browserslistrc 配置（支持 Chrome 86+）
               modules: false,
+              useBuiltIns: 'usage', // 按需引入 polyfill
+              corejs: 3, // 使用 core-js@3
             }],
             ['@babel/preset-react', { runtime: 'automatic' }],
           ]`;
@@ -540,21 +547,28 @@ function getReactBabelRule(useTypeScript: boolean = true): string {
 
 /**
  * 获取 Vue 项目的 Babel 规则
+ * @babel/preset-env 会自动读取 .browserslistrc 配置（支持 Chrome 86+）
  */
 function getVueBabelRule(useTypeScript: boolean = true): string {
   const testPattern = useTypeScript ? '/\\.ts$/' : '/\\.js$/';
+  // @babel/preset-env 默认会读取 .browserslistrc 或 package.json 中的 browserslist 配置
+  // 无需手动指定 targets，确保与 autoprefixer 使用相同的浏览器兼容目标
   const presets = useTypeScript
     ? `[
             ['@babel/preset-env', {
-              targets: { browsers: ['last 2 versions', '> 1%'] },
+              // 自动读取 .browserslistrc 配置（支持 Chrome 86+）
               modules: false,
+              useBuiltIns: 'usage', // 按需引入 polyfill
+              corejs: 3, // 使用 core-js@3
             }],
             '@babel/preset-typescript',
           ]`
     : `[
             ['@babel/preset-env', {
-              targets: { browsers: ['last 2 versions', '> 1%'] },
+              // 自动读取 .browserslistrc 配置（支持 Chrome 86+）
               modules: false,
+              useBuiltIns: 'usage', // 按需引入 polyfill
+              corejs: 3, // 使用 core-js@3
             }],
           ]`;
 

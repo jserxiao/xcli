@@ -13,14 +13,18 @@ TypeScript 提供静态类型检查，提高代码质量和开发效率。
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "lib": ["ES2022"],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "declaration": true,
-    "sourceMap": true
+    "declarationMap": true,
+    "sourceMap": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
   }
 }
 ```
@@ -30,12 +34,24 @@ TypeScript 提供静态类型检查，提高代码质量和开发效率。
 {
   "compilerOptions": {
     "target": "ES2022",
+    "useDefineForClassFields": true,
     "module": "ESNext",
-    "moduleResolution": "Node",
-    "lib": ["ES2022", "DOM"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "moduleResolution": "bundler",
     "jsx": "react-jsx",  // React 项目
     "strict": true,
-    // ...
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "paths": {
+      "shared": ["./packages/shared/src/index.ts"],
+      "ui": ["./packages/ui/src/index.ts"]
+    },
+    "baseUrl": "."
   }
 }
 ```
@@ -55,59 +71,125 @@ TypeScript 提供静态类型检查，提高代码质量和开发效率。
 
 ## ESLint
 
-ESLint 是 JavaScript/TypeScript 代码检查工具。
+ESLint 是 JavaScript/TypeScript 代码检查工具。xcli 使用 **ESLint 9+ Flat Config** 格式。
 
 ### 生成的配置
 
-```json
-// .eslintrc.json (Library 项目)
-{
-  "root": true,
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "ecmaVersion": 2022,
-    "sourceType": "module"
+```javascript
+// eslint.config.js (Library 项目)
+import js from '@eslint/js';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
+import prettierConfig from 'eslint-config-prettier';
+
+export default tseslint.config(
+  { ignores: ['dist'] },
+  {
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    files: ['**/*.ts'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: {
+        ...globals.node,
+        console: 'readonly',
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
   },
-  "plugins": ["@typescript-eslint"],
-  "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "prettier"
-  ],
-  "env": {
-    "node": true,
-    "es2022": true
-  }
-}
+  prettierConfig,
+);
 ```
 
-```json
-// .eslintrc.json (React 项目)
-{
-  "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:react/recommended",
-    "plugin:react-hooks/recommended",
-    "prettier"
-  ],
-  "env": {
-    "browser": true,
-    "es2022": true
-  }
-}
+```javascript
+// eslint.config.js (React 项目)
+import js from '@eslint/js';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
+import prettierConfig from 'eslint-config-prettier';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
+
+export default tseslint.config(
+  { ignores: ['dist'] },
+  {
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+    },
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowConstantExport: true },
+      ],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
+  },
+  prettierConfig,
+);
 ```
+
+```javascript
+// eslint.config.js (Vue 项目)
+import js from '@eslint/js';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
+import prettierConfig from 'eslint-config-prettier';
+
+export default tseslint.config(
+  { ignores: ['dist'] },
+  {
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    files: ['**/*.{ts,vue}'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
+  },
+  prettierConfig,
+);
+```
+
+### 添加的依赖
+
+| 项目类型 | 依赖包 |
+|----------|--------|
+| 通用 | `eslint`, `typescript-eslint`, `@eslint/js`, `eslint-config-prettier`, `globals` |
+| React | 额外添加 `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh` |
 
 ### 添加的脚本
 
 ```json
 {
   "scripts": {
-    "lint": "eslint src --ext .ts,.tsx",
-    "lint:fix": "eslint src --ext .ts,.tsx --fix"
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix"
   }
 }
 ```
+
+### Flat Config 说明
+
+ESLint 9+ 使用 Flat Config格式，相比传统配置有以下优势：
+
+- 📦 **单一配置文件** - 不再需要 `.eslintrc.*` 和 `.eslintignore`
+- 🔧 **更好的可扩展性** - 使用 JavaScript 原生数组展开
+- 🚀 **性能优化** - 更快的配置加载
+- 🎯 **类型安全** - 更好的 TypeScript 支持
 
 ---
 
@@ -141,16 +223,14 @@ Prettier 是代码格式化工具，与 ESLint 配合使用。
 
 ### 与 ESLint 集成
 
-安装 `eslint-config-prettier` 关闭 ESLint 中与 Prettier 冲突的规则：
+使用 `eslint-config-prettier` 关闭 ESLint 中与 Prettier 冲突的规则：
 
-```json
-{
-  "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "prettier"  // 放在最后
-  ]
-}
+```javascript
+// eslint.config.js
+export default tseslint.config(
+  // ... 其他配置
+  prettierConfig, // 放在最后
+);
 ```
 
 ---
@@ -295,7 +375,7 @@ pnpm type-check
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": "explicit"
   }
 }
 ```
@@ -318,7 +398,6 @@ pnpm format:check
 |------|------|
 | `tsconfig.json` | TypeScript 编译选项 |
 | `eslint.config.js` | ESLint 规则配置 (Flat Config) |
-| `.eslintignore` | ESLint 忽略文件 |
 | `.prettierrc` | Prettier 格式化规则 |
 | `.prettierignore` | Prettier 忽略文件 |
 | `.stylelintrc.json` | Stylelint 样式检查规则 |

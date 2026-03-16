@@ -662,6 +662,8 @@ export default About;
       deps.devDependencies['@babel/plugin-transform-class-properties'] = BABEL_VERSIONS['@babel/plugin-transform-class-properties'];
       deps.devDependencies['@babel/plugin-transform-runtime'] = BABEL_VERSIONS['@babel/plugin-transform-runtime'];
       deps.devDependencies['@babel/runtime'] = BABEL_VERSIONS['@babel/runtime'];
+      // Polyfill（用于 useBuiltIns: 'usage'）
+      deps.dependencies['core-js'] = BABEL_VERSIONS['core-js'];
       // React 热更新
       deps.devDependencies['@pmmmwh/react-refresh-webpack-plugin'] = FRAMEWORK_VERSIONS['@pmmmwh/react-refresh-webpack-plugin'];
       deps.devDependencies['react-refresh'] = FRAMEWORK_VERSIONS['react-refresh'];

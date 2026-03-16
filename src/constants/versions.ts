@@ -165,6 +165,8 @@ export const BABEL_VERSIONS = {
   '@babel/plugin-transform-class-properties': '^7.24.0',
   '@babel/plugin-transform-runtime': '^7.24.0',
   '@babel/runtime': '^7.24.0',
+  // Polyfill 相关（用于 useBuiltIns: 'usage'）
+  'core-js': '^3.36.0',
 } as const;
 
 // ============ 环境变量工具 ============

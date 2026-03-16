@@ -10,53 +10,85 @@ Vite 是下一代前端构建工具，提供极速的开发体验。
 
 ```typescript
 // vite.config.ts (React 项目)
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';
 import autoprefixer from 'autoprefixer';
 
-export default defineConfig({
-  plugins: [
-    react(),
-    legacy({
-      targets: ['defaults', 'not IE 11'],
-    }),
-  ],
-  css: {
-    postcss: {
-      plugins: [autoprefixer()],
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
+  
+  return {
+    plugins: [
+      react(),
+      legacy({
+        // 自动读取 .browserslistrc 配置
+      }),
+    ],
+    css: {
+      postcss: {
+        plugins: [
+          autoprefixer({
+            flexbox: 'no-2009',
+            grid: true,
+          }),
+        ],
+      },
     },
-  },
-  server: {
-    port: 3000,
-    open: true,
-  },
-  build: {
-    sourcemap: true,
-  },
+    server: {
+      port: 3000,
+      open: true,
+    },
+    build: {
+      sourcemap: true,
+      target: 'es2015',
+    },
+    define: {
+      __APP_ENV__: JSON.stringify(env),
+    },
+  };
 });
 ```
 
 ```typescript
 // vite.config.ts (Vue 项目)
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import legacy from '@vitejs/plugin-legacy';
 import autoprefixer from 'autoprefixer';
 
-export default defineConfig({
-  plugins: [
-    vue(),
-    legacy({
-      targets: ['defaults', 'not IE 11'],
-    }),
-  ],
-  css: {
-    postcss: {
-      plugins: [autoprefixer()],
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
+  
+  return {
+    plugins: [
+      vue(),
+      legacy({
+        // 自动读取 .browserslistrc 配置
+      }),
+    ],
+    css: {
+      postcss: {
+        plugins: [
+          autoprefixer({
+            flexbox: 'no-2009',
+            grid: true,
+          }),
+        ],
+      },
     },
-  },
-  // ...
+    server: {
+      port: 3000,
+      open: true,
+    },
+    build: {
+      sourcemap: true,
+      target: 'es2015',
+    },
+    define: {
+      __APP_ENV__: JSON.stringify(env),
+    },
+  };
 });
 ```
 
@@ -66,7 +98,7 @@ export default defineConfig({
 - 🔥 **即时热更新** - 模块热替换 (HMR)
 - 🛠️ **丰富的插件** - 支持 React、Vue、Svelte 等
 - 📦 **优化的构建** - 基于 Rollup 的生产构建
-- 🌐 **浏览器兼容** - Legacy 插件支持老旧浏览器
+- 🌐 **浏览器兼容** - Legacy 插件 + Autoprefixer 自动处理
 
 ### 添加的脚本
 
@@ -134,92 +166,31 @@ export default {
 
 Webpack 是功能强大的模块打包工具，适合 React/Vue 应用项目。
 
-### 生成的配置（React 项目）
+### 生成的配置
+
+Webpack 配置包含完整的开发和生产环境支持：
+
+- **开发服务器** - 热更新、端口配置
+- **代码分割** - vendor、react/vue 分离
+- **样式处理** - CSS/Less/SCSS + CSS Modules
+- **资源优化** - 图片压缩、Gzip 压缩
+- **浏览器兼容** - Babel + Autoprefixer + core-js
+
+### Babel 配置
 
 ```javascript
-// webpack.config.cjs
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-
-const isProduction = process.env.NODE_ENV === 'production';
-const isDevelopment = !isProduction;
-
-module.exports = {
-  entry: './src/main.tsx',
-  output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: isProduction ? 'js/[name].[contenthash:8].js' : 'js/[name].js',
-    chunkFilename: isProduction ? 'js/[name].[contenthash:8].chunk.js' : 'js/[name].chunk.js',
-    clean: true,
-    publicPath: '/',
-  },
-  mode: isProduction ? 'production' : 'development',
-  devtool: isProduction ? 'source-map' : 'eval-source-map',
-  devServer: {
-    port: 3000,
-    hot: true,
-    open: true,
-    historyApiFallback: true,
-    static: './public',
-  },
-  module: {
-    rules: [
-      {
-        test: /\.[jt]sx?$/,
-        exclude: /node_modules/,
-        use: 'babel-loader',
-      },
-      {
-        test: /\.css$/,
-        use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'],
-      },
-      {
-        test: /\.less$/,
-        use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader', 'less-loader'],
-      },
-      {
-        test: /\.scss$/,
-        use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader', 'sass-loader'],
-      },
-      {
-        test: /\.(png|jpg|gif|svg)$/,
-        type: 'asset/resource',
-        generator: { filename: 'images/[hash][ext][query]' },
-      },
-    ],
-  },
-  resolve: {
-    extensions: ['.tsx', '.ts', '.jsx', '.js'],
-    alias: { '@': path.resolve(__dirname, 'src') },
-  },
-  plugins: [
-    new HtmlWebpackPlugin({
-      template: './index.html',
-      filename: 'index.html',
-    }),
-    new MiniCssExtractPlugin({
-      filename: isProduction ? 'css/[name].[contenthash:8].css' : 'css/[name].css',
-      chunkFilename: isProduction ? 'css/[name].[contenthash:8].chunk.css' : 'css/[name].chunk.css',
-    }),
-    isDevelopment && new ReactRefreshWebpackPlugin(),
-    process.env.ANALYZE && new BundleAnalyzerPlugin(),
-  ].filter(Boolean),
-  optimization: {
-    splitChunks: {
-      chunks: 'all',
-      cacheGroups: {
-        vendors: {
-          test: /[\\/]node_modules[\\/]/,
-          name: 'vendors',
-          chunks: 'all',
-        },
-      },
-    },
-  },
-};
+// @babel/preset-env 自动读取 .browserslistrc 配置
+{
+  presets: [
+    ['@babel/preset-env', {
+      modules: false,
+      useBuiltIns: 'usage', // 按需引入 polyfill
+      corejs: 3,
+    }],
+    ['@babel/preset-react', { runtime: 'automatic' }],
+    '@babel/preset-typescript',
+  ],
+}
 ```
 
 ### 特性
@@ -228,7 +199,8 @@ module.exports = {
 - 📦 **代码分割** - 自动拆分 vendor 和业务代码
 - 🎨 **CSS 提取** - 独立 CSS 文件，优化加载性能
 - 📊 **打包分析** - 通过 `ANALYZE=true pnpm build` 分析打包体积
-- 🗜️ **资源优化** - 文件名哈希、资源压缩
+- 🗜️ **资源优化** - 文件名哈希、图片压缩、Gzip 压缩
+- 🌐 **Polyfill** - 按需注入 core-js polyfill
 
 ### 添加的脚本
 
@@ -236,8 +208,7 @@ module.exports = {
 {
   "scripts": {
     "dev": "webpack serve --mode development",
-    "build": "webpack --mode production",
-    "build:analyze": "cross-env ANALYZE=true webpack --mode production"
+    "build": "webpack --mode production"
   }
 }
 ```
@@ -246,20 +217,24 @@ module.exports = {
 
 ```json
 {
+  "dependencies": {
+    "core-js": "^3.36.0"  // Polyfill 支持
+  },
   "devDependencies": {
-    "webpack": "^5.x",
-    "webpack-cli": "^5.x",
-    "webpack-dev-server": "^5.x",
-    "html-webpack-plugin": "^5.x",
-    "mini-css-extract-plugin": "^2.x",
-    "css-loader": "^7.x",
-    "style-loader": "^4.x",
-    "postcss-loader": "^8.x",
-    "babel-loader": "^9.x",
-    "@babel/core": "^7.x",
-    "@babel/preset-env": "^7.x",
-    "@babel/preset-react": "^7.x",
-    "@babel/preset-typescript": "^7.x"
+    "webpack": "^5.98.0",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.3",
+    "html-webpack-plugin": "^5.6.0",
+    "mini-css-extract-plugin": "^2.9.2",
+    "css-loader": "^7.1.2",
+    "style-loader": "^4.0.0",
+    "postcss-loader": "^8.1.1",
+    "autoprefixer": "^10.4.17",
+    "babel-loader": "^9.1.3",
+    "@babel/core": "^7.24.0",
+    "@babel/preset-env": "^7.24.0",
+    "@babel/preset-react": "^7.24.0",
+    "@babel/preset-typescript": "^7.24.0"
   }
 }
 ```
@@ -268,9 +243,41 @@ module.exports = {
 
 ## 浏览器兼容配置
 
-Vite 项目内置以下兼容配置：
+所有项目都统一使用 `.browserslistrc` 配置浏览器兼容性：
 
-### Autoprefixer
+### Browserslist 配置
+
+```ini
+# .browserslistrc
+[production]
+> 0.5%
+last 2 versions
+not dead
+not IE 11
+Chrome >= 86
+
+[development]
+last 1 chrome version
+last 1 firefox version
+last 1 safari version
+```
+
+### PostCSS 配置
+
+```javascript
+// postcss.config.js
+export default {
+  plugins: {
+    autoprefixer: {
+      // 自动读取 .browserslistrc 配置
+      flexbox: 'no-2009', // 只添加最终的 flexbox 规格
+      grid: true, // 支持 grid 布局前缀
+    },
+  },
+};
+```
+
+### Autoprefixer 效果
 
 自动添加 CSS 浏览器前缀：
 
@@ -293,31 +300,36 @@ Vite 项目内置以下兼容配置：
 }
 ```
 
-### Legacy 插件
+### Legacy 插件 (Vite)
 
 为老旧浏览器提供 polyfill：
 
 ```typescript
 legacy({
-  targets: ['defaults', 'not IE 11'],
+  // 自动读取 .browserslistrc 配置
 })
 ```
 
-### Browserslist 配置
+### Babel Polyfill (Webpack)
 
-```
-# .browserslistrc
-[production]
-> 0.5%
-last 2 versions
-not dead
-not IE 11
+按需注入 polyfill：
 
-[development]
-last 1 chrome version
-last 1 firefox version
-last 1 safari version
+```javascript
+// @babel/preset-env 配置
+{
+  useBuiltIns: 'usage',
+  corejs: 3,
+  // 自动读取 .browserslistrc 配置
+}
 ```
+
+### 工具协同
+
+| 工具 | 配置读取方式 |
+|------|-------------|
+| autoprefixer | 自动读取 `.browserslistrc` |
+| @babel/preset-env (Webpack) | 自动读取 `.browserslistrc` |
+| @vitejs/plugin-legacy (Vite) | 自动读取 `.browserslistrc` |
 
 ---
 

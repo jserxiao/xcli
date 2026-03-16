@@ -89,6 +89,7 @@ coverage
 
 /**
  * 获取 .browserslistrc 内容
+ * 支持 Chrome 86+ 及现代浏览器
  */
 export function getBrowserslistContent(): string {
   return `[production]
@@ -96,6 +97,7 @@ export function getBrowserslistContent(): string {
 last 2 versions
 not dead
 not IE 11
+Chrome >= 86
 
 [development]
 last 1 chrome version
@@ -106,11 +108,17 @@ last 1 safari version
 
 /**
  * 获取 postcss.config.js 内容
+ * autoprefixer 会自动读取 .browserslistrc 配置
  */
 export function getPostcssConfig(): string {
   return `export default {
   plugins: {
-    autoprefixer: {},
+    autoprefixer: {
+      // autoprefixer 会自动读取 .browserslistrc 或 package.json 中的 browserslist 配置
+      // 无需手动指定 overrideBrowserslist
+      flexbox: 'no-2009', // 只添加最终的 flexbox 规格，不添加 2009 年的旧语法
+      grid: true, // 支持 IE/Edge 的 grid 布局前缀
+    },
   },
 };
 `;

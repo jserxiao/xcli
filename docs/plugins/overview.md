@@ -8,7 +8,7 @@ xcli 采用可插拔的插件架构，你可以根据项目需求选择启用不
 插件系统
 ├── 代码规范
 │   ├── TypeScript   - TypeScript 语言支持
-│   ├── ESLint       - 代码质量检查
+│   ├── ESLint       - 代码质量检查 (ESLint 9+ Flat Config)
 │   ├── Prettier     - 代码格式化
 │   └── Stylelint    - 样式代码检查
 │
@@ -33,7 +33,7 @@ xcli 采用可插拔的插件架构，你可以根据项目需求选择启用不
 | 插件 | 说明 |
 |------|------|
 | TypeScript | TypeScript 支持（强制启用） |
-| ESLint | 代码检查 |
+| ESLint | 代码检查（Flat Config） |
 | Prettier | 代码格式化 |
 | Stylelint | 样式代码检查 |
 | Vite | React/Vue 项目自动启用 |
@@ -45,7 +45,7 @@ xcli 采用可插拔的插件架构，你可以根据项目需求选择启用不
 | 插件 | 名称 | 说明 |
 |------|------|------|
 | `typescript` | TypeScript | TypeScript 语言支持，生成 `tsconfig.json` |
-| `eslint` | ESLint | 代码质量检查，支持 React/Vue 规则 |
+| `eslint` | ESLint | 代码质量检查，ESLint 9+ Flat Config 格式，支持 React/Vue 规则 |
 | `prettier` | Prettier | 代码格式化，与 ESLint 集成 |
 | `stylelint` | Stylelint | 样式代码检查，支持 Less/SCSS/CSS |
 
@@ -55,7 +55,7 @@ xcli 采用可插拔的插件架构，你可以根据项目需求选择启用不
 |------|------|------|
 | `vite` | Vite | 下一代前端构建工具，内置 legacy 和 autoprefixer |
 | `rollup` | Rollup | JavaScript 模块打包器，适合库开发 |
-| `webpack` | Webpack | 功能强大的打包工具 |
+| `webpack` | Webpack | 功能强大的打包工具，含 Babel + Autoprefixer + Polyfill |
 
 ### 测试工具
 
@@ -109,8 +109,9 @@ xcli init my-lib -t library --default
 ```
 my-project/
 ├── tsconfig.json        # TypeScript
-├── .eslintrc.json       # ESLint
+├── eslint.config.js     # ESLint (Flat Config)
 ├── .prettierrc          # Prettier
+├── .prettierignore      # Prettier 忽略文件
 ├── .stylelintrc.json    # Stylelint
 ├── .stylelintignore     # Stylelint 忽略文件
 ├── vite.config.ts       # Vite
@@ -119,8 +120,18 @@ my-project/
 ├── .husky/              # Husky
 │   ├── pre-commit
 │   └── commit-msg
-└── .commitlintrc.json   # Commitlint
+├── .commitlintrc.json   # Commitlint
+├── postcss.config.js    # PostCSS (Autoprefixer)
+└── .browserslistrc      # 浏览器兼容性配置
 ```
+
+## 浏览器兼容性
+
+所有项目统一使用 `.browserslistrc` 配置浏览器兼容性：
+
+- **Autoprefixer** - 自动读取配置添加 CSS 前缀
+- **Babel (@babel/preset-env)** - 自动读取配置注入 Polyfill
+- **Vite Legacy 插件** - 自动读取配置生成兼容代码
 
 ## 下一步
 

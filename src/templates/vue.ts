@@ -562,6 +562,8 @@ ${getPageStyles(styleType)}
       deps.devDependencies['@babel/plugin-transform-class-properties'] = BABEL_VERSIONS['@babel/plugin-transform-class-properties'];
       deps.devDependencies['@babel/plugin-transform-runtime'] = BABEL_VERSIONS['@babel/plugin-transform-runtime'];
       deps.devDependencies['@babel/runtime'] = BABEL_VERSIONS['@babel/runtime'];
+      // Polyfill（用于 useBuiltIns: 'usage'）
+      deps.dependencies['core-js'] = BABEL_VERSIONS['core-js'];
       // TypeScript preset（仅 TS 项目）
       if (useTypeScript) {
         deps.devDependencies['@babel/preset-typescript'] = BABEL_VERSIONS['@babel/preset-typescript'];

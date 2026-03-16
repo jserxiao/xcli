@@ -13,6 +13,8 @@ my-project/
 ├── index.html              # HTML 入口
 ├── vite.config.ts          # Vite 配置
 ├── postcss.config.js       # PostCSS 配置
+├── .browserslistrc         # 浏览器兼容性配置
+├── eslint.config.js        # ESLint 配置 (Flat Config)
 ├── tsconfig.json           # TypeScript 配置
 ├── pnpm-workspace.yaml     # pnpm workspace 配置
 ├── package.json            # 项目配置
@@ -45,7 +47,7 @@ my-project/
 - 🎯 **React Router 6** - 内置路由配置
 - 📦 **打包工具** - 可选 Vite / Webpack
 - 🎨 **样式预处理器** - CSS / Less / Sass
-- 🌐 **浏览器兼容** - Autoprefixer + Legacy 插件
+- 🌐 **浏览器兼容** - Autoprefixer + Legacy 插件 + Polyfill
 - 📁 **Monorepo** - pnpm workspace 多包管理
 - 🗃️ **状态管理** - 可选 Redux Toolkit / MobX
 - 🌐 **HTTP 请求** - 可选 Axios / Fetch 封装
@@ -64,13 +66,15 @@ xcli i my-app -t react -m redux -d
 src/store/
 ├── index.ts          # Store 配置
 ├── counterSlice.ts   # Slice 示例
-└── hooks.ts          # 类型安全的 hooks
+├── apiSlice.ts       # RTK Query API
+└── middleware/       # 中间件
+    └── logger.ts     # 日志中间件
 ```
 
 使用示例：
 
 ```tsx
-import { useAppDispatch, useAppSelector } from './store/hooks';
+import { useAppDispatch, useAppSelector } from './store';
 import { increment, decrement } from './store/counterSlice';
 
 function Counter() {
@@ -129,6 +133,8 @@ my-project/
 ├── index.html              # HTML 入口
 ├── vite.config.ts          # Vite 配置
 ├── postcss.config.js       # PostCSS 配置
+├── .browserslistrc         # 浏览器兼容性配置
+├── eslint.config.js        # ESLint 配置 (Flat Config)
 ├── tsconfig.json           # TypeScript 配置
 ├── pnpm-workspace.yaml     # pnpm workspace 配置
 ├── package.json            # 项目配置
@@ -160,6 +166,7 @@ my-project/
 - 🎯 **Vue Router 4** - 内置路由配置
 - 📦 **打包工具** - 可选 Vite / Webpack
 - 🎨 **样式预处理器** - CSS / Less / Sass
+- 🌐 **浏览器兼容** - Autoprefixer + Legacy 插件 + Polyfill
 - 📁 **Monorepo** - pnpm workspace 多包管理
 - 🗃️ **Pinia** - Vue 官方状态管理（默认集成）
 - 🌐 **HTTP 请求** - 可选 Axios / Fetch 封装
@@ -237,6 +244,37 @@ React 和 Vue 模板支持三种样式预处理器：
 - **PostCSS** - CSS 后处理器
 - **Autoprefixer** - 自动添加浏览器前缀
 - **Legacy 插件** - 支持老旧浏览器
+
+---
+
+## 浏览器兼容性
+
+所有模板项目统一使用 `.browserslistrc` 配置浏览器兼容性：
+
+```ini
+# .browserslistrc
+[production]
+> 0.5%
+last 2 versions
+not dead
+not IE 11
+Chrome >= 86
+
+[development]
+last 1 chrome version
+last 1 firefox version
+last 1 safari version
+```
+
+### 工具协同
+
+以下工具会自动读取 `.browserslistrc` 配置：
+
+| 工具 | 作用 |
+|------|------|
+| Autoprefixer | 添加 CSS 浏览器前缀 |
+| Babel (@babel/preset-env) | 按需注入 JavaScript Polyfill |
+| Vite Legacy 插件 | 生成兼容旧浏览器的代码 |
 
 ---
 
