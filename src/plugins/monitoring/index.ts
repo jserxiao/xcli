@@ -19,7 +19,13 @@ export const xstatPlugin: Plugin = {
   },
   files: [
     {
-      path: 'src/utils/monitoring.ts',
+      path: (context: PluginContext) => {
+        // React 项目使用 .tsx/.jsx 扩展名（包含 JSX），Vue 项目使用 .ts/.js
+        const ext = context.projectType === 'react'
+          ? (context.useTypeScript ? '.tsx' : '.jsx')
+          : (context.useTypeScript ? '.ts' : '.js');
+        return `src/utils/monitoring${ext}`;
+      },
       content: (context: PluginContext) => {
         const bundler = context.bundler === 'none' ? 'vite' : context.bundler;
         if (context.projectType === 'react') {

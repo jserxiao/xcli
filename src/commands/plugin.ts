@@ -195,7 +195,10 @@ export async function removePlugin(pluginNames: string[]): Promise<void> {
       // 移除配置文件
       if (plugin.files) {
         for (const file of plugin.files) {
-          const filePath = path.join(currentDir, file.path);
+          const pathStr = typeof file.path === 'function'
+            ? file.path({} as PluginContext)
+            : file.path;
+          const filePath = path.join(currentDir, pathStr);
           await fs.remove(filePath);
         }
       }

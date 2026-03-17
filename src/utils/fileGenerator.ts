@@ -17,7 +17,12 @@ export class FileGenerator {
    * 生成单个文件
    */
   async generateFile(file: PluginFile): Promise<void> {
-    const filePath = path.join(this.context.projectPath, file.path);
+    // 处理动态路径
+    const filePathStr =
+      typeof file.path === 'function'
+        ? file.path(this.context)
+        : file.path;
+    const filePath = path.join(this.context.projectPath, filePathStr);
     const dir = path.dirname(filePath);
 
     // 确保目录存在

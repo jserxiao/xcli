@@ -435,7 +435,10 @@ export async function init(projectName: string | undefined, options: CLIOptions)
         // 返回一个不包含配置文件的插件版本（只保留依赖和脚本）
         return {
           ...plugin,
-          files: plugin.files?.filter((f) => !bundlerFiles.includes(f.path)) || [],
+          files: plugin.files?.filter((f) => {
+            const pathStr = typeof f.path === 'function' ? f.path(context) : f.path;
+            return !bundlerFiles.includes(pathStr);
+          }) || [],
         };
       }
       return plugin;

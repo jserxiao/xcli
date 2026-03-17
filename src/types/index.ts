@@ -28,8 +28,8 @@ export interface Plugin {
  * 插件文件定义
  */
 export interface PluginFile {
-  /** 文件路径（相对于项目根目录） */
-  path: string;
+  /** 文件路径（相对于项目根目录，支持动态路径） */
+  path: string | ((context: PluginContext) => string);
   /** 文件内容（可以是字符串或模板路径） */
   content: string | ((context: PluginContext) => string);
   /** 是否是模板文件 */
