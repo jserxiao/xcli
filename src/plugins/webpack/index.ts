@@ -157,11 +157,12 @@ function getWebpackScripts(projectType: ProjectType): Record<string, string> {
 export function createWebpackPlugin(projectType: ProjectType, styleType: StyleType = 'css'): Plugin {
   const getWebpackConfig = (context: PluginContext): string => {
     const useTypeScript = context.useTypeScript ?? true;
+    const monitoring = context.monitoring === 'xstat';
     switch (projectType) {
       case 'react':
-        return getReactWebpackConfig(styleType, useTypeScript);
+        return getReactWebpackConfig(styleType, useTypeScript, monitoring);
       case 'vue':
-        return getVueWebpackConfig(styleType, useTypeScript);
+        return getVueWebpackConfig(styleType, useTypeScript, monitoring);
       case 'library':
       default:
         return getLibraryWebpackConfig(useTypeScript);

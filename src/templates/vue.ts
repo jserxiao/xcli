@@ -236,34 +236,18 @@ export const vueTemplate = {
 import './style.${styleExt}';
 import App from './App.vue';
 import router from './router';
+${monitoring === 'xstat' ? "import { initXStat } from './utils/monitoring';" : ''}
 `;
-
-    // 添加监控 SDK 导入
-    if (monitoring === 'xstat') {
-      mainContent += `import { initXStat, vueErrorHandler } from './utils/monitoring';
-
-// 初始化前端监控
-initXStat({
-  appId: import.meta.env.VITE_APP_ID || 'your-app-id',
-  env: import.meta.env.MODE,
-  version: import.meta.env.VITE_APP_VERSION || '1.0.0',
-});
-`;
-    }
-
-    if (stateManager === 'pinia') {
-      mainContent += `import { pinia } from './store';
-`;
-    }
 
     mainContent += `
 const app = createApp(App);
 `;
 
-    // Vue 错误处理
+    // Vue 错误处理和监控初始化
     if (monitoring === 'xstat') {
-      mainContent += `// 配置 Vue 错误处理
-app.config.errorHandler = vueErrorHandler;
+      mainContent += `
+// 初始化前端监控（传入 Vue app 实例以启用 Vue 错误监控）
+initXStat(app);
 
 app.use(router);
 `;

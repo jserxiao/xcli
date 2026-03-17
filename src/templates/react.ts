@@ -244,7 +244,7 @@ export const reactTemplate = {
     if (monitoring === 'xstat') {
       await fs.ensureDir(path.join(projectPath, 'src', 'utils'));
       await fs.writeFile(
-        path.join(projectPath, 'src', 'utils', `monitoring${ext}`),
+        path.join(projectPath, 'src', 'utils', `monitoring${jsxExt}`),
         getReactMonitoringContent(useTypeScript, bundler === 'none' ? 'vite' : bundler),
         'utf-8'
       );
@@ -285,11 +285,7 @@ import './index.${styleExt}';
       mainContent += `import { initXStat, ReactErrorBoundary } from './utils/monitoring';
 
 // 初始化前端监控
-initXStat({
-  appId: import.meta.env.VITE_APP_ID || 'your-app-id',
-  env: import.meta.env.MODE,
-  version: import.meta.env.VITE_APP_VERSION || '1.0.0',
-});
+initXStat();
 `;
     }
 

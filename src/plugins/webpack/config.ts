@@ -288,20 +288,36 @@ const envKeys = Object.keys(envConfig).reduce((acc, key) => {
 /**
  * DefinePlugin 配置（环境变量注入）- React 版本
  */
-function getReactDefinePlugin(): string {
+function getReactDefinePlugin(monitoring: boolean = false): string {
+  const monitoringEnvVars = monitoring
+    ? `
+      // 监控 SDK 默认配置（如果未在 .env 中定义）
+      'process.env.REACT_APP_APP_KEY': envKeys['process.env.REACT_APP_APP_KEY'] || JSON.stringify('your-app-key'),
+      'process.env.REACT_APP_MONITOR_SERVER': envKeys['process.env.REACT_APP_MONITOR_SERVER'] || JSON.stringify('https://your-server.com/api/log'),
+      'process.env.REACT_APP_VERSION': envKeys['process.env.REACT_APP_VERSION'] || JSON.stringify('1.0.0'),`
+    : '';
+
   return `new DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
       // 从 .env 文件加载的环境变量
       ...envKeys,
       // 额外的全局常量
-      'process.env.REACT_APP_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
+      'process.env.REACT_APP_ENV': JSON.stringify(isProduction ? 'production' : 'development'),${monitoringEnvVars}
     }),`;
 }
 
 /**
  * DefinePlugin 配置（环境变量注入）- Vue 版本
  */
-function getVueDefinePlugin(): string {
+function getVueDefinePlugin(monitoring: boolean = false): string {
+  const monitoringEnvVars = monitoring
+    ? `
+        // 监控 SDK 默认配置（如果未在 .env 中定义）
+        'process.env.VUE_APP_KEY': envKeys['process.env.VUE_APP_KEY'] || JSON.stringify('your-app-key'),
+        'process.env.VUE_MONITOR_SERVER': envKeys['process.env.VUE_MONITOR_SERVER'] || JSON.stringify('https://your-server.com/api/log'),
+        'process.env.VUE_APP_VERSION': envKeys['process.env.VUE_APP_VERSION'] || JSON.stringify('1.0.0'),`
+    : '';
+
   return `new DefinePlugin({
         // Vue 相关配置
         __VUE_OPTIONS_API__: true,
@@ -309,7 +325,7 @@ function getVueDefinePlugin(): string {
         __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
         // 环境变量
         'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
-        ...envKeys,
+        ...envKeys,${monitoringEnvVars}
       }),`;
 }
 
@@ -670,7 +686,7 @@ module.exports = (env, argv) => {
 /**
  * 获取 React 项目的 Webpack 配置
  */
-export function getReactWebpackConfig(styleType: StyleType = 'less', useTypeScript: boolean = true): string {
+export function getReactWebpackConfig(styleType: StyleType = 'less', useTypeScript: boolean = true, monitoring: boolean = false): string {
   const styleRules = getStyleRules(styleType);
   const babelRule = getReactBabelRule(useTypeScript);
 
@@ -725,7 +741,7 @@ ${getEnvLoading('REACT_APP_')}
     plugins: [
       ${getHtmlWebpackPlugin()}
       ${getMiniCssExtractPlugin()}
-      ${getReactDefinePlugin()}
+      ${getReactDefinePlugin(monitoring)}
       ${getCompressionPlugin()}
       ${getReactRefreshPlugin()}
       ${getImageMinimizerPlugin()}
@@ -756,7 +772,7 @@ ${getEnvLoading('REACT_APP_')}
 /**
  * 获取 Vue 项目的 Webpack 配置
  */
-export function getVueWebpackConfig(styleType: StyleType = 'less', useTypeScript: boolean = true): string {
+export function getVueWebpackConfig(styleType: StyleType = 'less', useTypeScript: boolean = true, monitoring: boolean = false): string {
   const styleRules = getStyleRules(styleType);
   const babelRule = getVueBabelRule(useTypeScript);
 
@@ -816,7 +832,7 @@ ${getEnvLoading('VUE_')}
     plugins: [
       ${getVueLoaderPlugin()}
       ${getHtmlWebpackPlugin()}
-      ${getVueDefinePlugin()}
+      ${getVueDefinePlugin(monitoring)}
       ${getMiniCssExtractPlugin()}
       ${getCompressionPlugin()}
       ${getImageMinimizerPlugin()}

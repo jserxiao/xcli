@@ -13,27 +13,35 @@ interface ErrorInfo {
   componentStack: string;
 }
 
-interface XStatOptions {
-  appId: string;
-  env: string;
-  version: string;
+interface XStatConfig {
+  server: string;
+  appKey: string;
+  appVersion: string;
+  env: 'development' | 'test' | 'production';
 }
 ` : '';
 
-  const envAppId = bundler === 'vite'
-    ? "import.meta.env.VITE_APP_ID || 'your-app-id'"
-    : "process.env.APP_ID || 'your-app-id'";
+  const envAppKey = bundler === 'vite'
+    ? "import.meta.env.VITE_APP_KEY || 'your-app-key'"
+    : "process.env.REACT_APP_APP_KEY || 'your-app-key'";
+  const envServer = bundler === 'vite'
+    ? "import.meta.env.VITE_MONITOR_SERVER || 'https://your-server.com/api/log'"
+    : "process.env.REACT_APP_MONITOR_SERVER || 'https://your-server.com/api/log'";
   const envMode = bundler === 'vite'
     ? 'import.meta.env.MODE'
     : 'process.env.NODE_ENV';
   const envVersion = bundler === 'vite'
     ? "import.meta.env.VITE_APP_VERSION || '1.0.0'"
-    : "process.env.APP_VERSION || '1.0.0'";
+    : "process.env.REACT_APP_VERSION || '1.0.0'";
   const devCheck = bundler === 'vite'
     ? 'import.meta.env.DEV'
     : "process.env.NODE_ENV === 'development'";
 
-  return `import React, { Component, type ReactNode } from 'react';
+  const reactImport = useTypeScript
+    ? "import React, { Component, type ReactNode } from 'react';"
+    : "import React, { Component } from 'react';";
+
+  return `${reactImport}
 import XStat from '@jserxiao/xstat';
 ${interfaceDef}
 // XStat 实例
@@ -42,41 +50,38 @@ let xstat${useTypeScript ? ': XStat | null' : ''} = null;
 /**
  * 初始化 XStat 监控
  */
-export function initXStat(options${useTypeScript ? ': XStatOptions' : ''}) {
-  xstat = new XStat({
-    appId: options.appId,
-    env: options.env,
-    version: options.version,
-    // 性能监控配置
-    performance: {
-      enable: true,
-      sampleRate: 1.0,
-    },
-    // 错误监控配置
-    error: {
-      enable: true,
-      captureJsError: true,
-      capturePromiseError: true,
-      captureResourceError: true,
-    },
-    // 请求监控配置
-    request: {
-      enable: true,
-      captureFetch: true,
-      captureXHR: true,
-    },
-    // 行为监控配置
-    behavior: {
-      enable: true,
-      captureClick: true,
-      captureRoute: true,
-    },
-  });
+export function initXStat(config${useTypeScript ? ': Partial<XStatConfig>' : ''} = {}) {
+  xstat = new XStat();
 
-  // 上报应用启动
-  xstat.report('app_start', {
-    timestamp: Date.now(),
-    userAgent: navigator.userAgent,
+  xstat.init({
+    server: config.server || ${envServer},
+    appKey: config.appKey || ${envAppKey},
+    appVersion: config.appVersion || ${envVersion},
+    env: config.env || ${envMode},
+    // 插件配置 - 自动注册
+    plugins: {
+      error: { react: React },  // React 错误监控
+      performance: true,        // 性能监控
+      behavior: true,           // 行为监控
+      http: true,               // HTTP 请求监控
+    },
+    // 延迟批量上报
+    delay: {
+      max: 100,
+      time: 3000,
+      timeout: 10000,
+    },
+    // 发送方式
+    sendType: 'xhr',
+    // 采样率配置
+    sampling: {
+      error: 1,
+      performance: 0.5,
+      behavior: 0.3,
+      pv: 1,
+    },
+    // 调试模式
+    debug: ${devCheck},
   });
 
   return xstat;
@@ -118,6 +123,18 @@ export function reportEvent(eventName${useTypeScript ? ': string' : ''}, data${u
       timestamp: Date.now(),
     });
   }
+}
+
+/**
+ * 获取 React 错误边界组件
+ * 使用 xstat 内置的 ReactErrorPlugin
+ */
+export function getErrorBoundary() {
+  if (!xstat) {
+    return null;
+  }
+  const plugin = xstat.getPlugin('ReactErrorPlugin');
+  return plugin?.createErrorBoundary(React);
 }
 
 // React 错误边界组件属性
@@ -165,9 +182,10 @@ export class ReactErrorBoundary extends Component<ErrorBoundaryProps, ErrorBound
 
 // 默认导出配置（用于自动初始化）
 export const defaultXStatConfig = {
-  appId: ${envAppId},
+  server: ${envServer},
+  appKey: ${envAppKey},
+  appVersion: ${envVersion},
   env: ${envMode},
-  version: ${envVersion},
 };
 `;
 }
@@ -177,22 +195,26 @@ export const defaultXStatConfig = {
  */
 export function getVueMonitoringContent(useTypeScript: boolean, bundler: 'vite' | 'webpack' | 'rollup'): string {
   const interfaceDef = useTypeScript ? `
-interface XStatOptions {
-  appId: string;
-  env: string;
-  version: string;
+interface XStatConfig {
+  server: string;
+  appKey: string;
+  appVersion: string;
+  env: 'development' | 'test' | 'production';
 }
 ` : '';
 
-  const envAppId = bundler === 'vite'
-    ? "import.meta.env.VITE_APP_ID || 'your-app-id'"
-    : "process.env.APP_ID || 'your-app-id'";
+  const envAppKey = bundler === 'vite'
+    ? "import.meta.env.VITE_APP_KEY || 'your-app-key'"
+    : "process.env.VUE_APP_KEY || 'your-app-key'";
+  const envServer = bundler === 'vite'
+    ? "import.meta.env.VITE_MONITOR_SERVER || 'https://your-server.com/api/log'"
+    : "process.env.VUE_MONITOR_SERVER || 'https://your-server.com/api/log'";
   const envMode = bundler === 'vite'
     ? 'import.meta.env.MODE'
     : 'process.env.NODE_ENV';
   const envVersion = bundler === 'vite'
     ? "import.meta.env.VITE_APP_VERSION || '1.0.0'"
-    : "process.env.APP_VERSION || '1.0.0'";
+    : "process.env.VUE_APP_VERSION || '1.0.0'";
   const devCheck = bundler === 'vite'
     ? 'import.meta.env.DEV'
     : "process.env.NODE_ENV === 'development'";
@@ -204,42 +226,40 @@ let xstat${useTypeScript ? ': XStat | null' : ''} = null;
 
 /**
  * 初始化 XStat 监控
+ * @param app - Vue 应用实例（用于 Vue 错误监控）
  */
-export function initXStat(options${useTypeScript ? ': XStatOptions' : ''}) {
-  xstat = new XStat({
-    appId: options.appId,
-    env: options.env,
-    version: options.version,
-    // 性能监控配置
-    performance: {
-      enable: true,
-      sampleRate: 1.0,
-    },
-    // 错误监控配置
-    error: {
-      enable: true,
-      captureJsError: true,
-      capturePromiseError: true,
-      captureResourceError: true,
-    },
-    // 请求监控配置
-    request: {
-      enable: true,
-      captureFetch: true,
-      captureXHR: true,
-    },
-    // 行为监控配置
-    behavior: {
-      enable: true,
-      captureClick: true,
-      captureRoute: true,
-    },
-  });
+export function initXStat(app${useTypeScript ? ': any' : ''}, config${useTypeScript ? ': Partial<XStatConfig>' : ''} = {}) {
+  xstat = new XStat();
 
-  // 上报应用启动
-  xstat.report('app_start', {
-    timestamp: Date.now(),
-    userAgent: navigator.userAgent,
+  xstat.init({
+    server: config.server || ${envServer},
+    appKey: config.appKey || ${envAppKey},
+    appVersion: config.appVersion || ${envVersion},
+    env: config.env || ${envMode},
+    // 插件配置 - 自动注册
+    plugins: {
+      error: app ? { vue: app } : true,  // Vue 错误监控
+      performance: true,                  // 性能监控
+      behavior: true,                     // 行为监控
+      http: true,                         // HTTP 请求监控
+    },
+    // 延迟批量上报
+    delay: {
+      max: 100,
+      time: 3000,
+      timeout: 10000,
+    },
+    // 发送方式
+    sendType: 'xhr',
+    // 采样率配置
+    sampling: {
+      error: 1,
+      performance: 0.5,
+      behavior: 0.3,
+      pv: 1,
+    },
+    // 调试模式
+    debug: ${devCheck},
   });
 
   return xstat;
@@ -310,9 +330,10 @@ export function reportEvent(eventName${useTypeScript ? ': string' : ''}, data${u
 
 // 默认导出配置（用于自动初始化）
 export const defaultXStatConfig = {
-  appId: ${envAppId},
+  server: ${envServer},
+  appKey: ${envAppKey},
+  appVersion: ${envVersion},
   env: ${envMode},
-  version: ${envVersion},
 };
 `;
 }
