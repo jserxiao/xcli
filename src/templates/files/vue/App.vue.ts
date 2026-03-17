@@ -1,5 +1,5 @@
-import type { StyleType } from '../../../types/index.js';
-import { getAppStyles } from './styles.js';
+import type { StyleType } from '../../../types';
+import { getAppStyles } from './styles';
 
 export function getAppVue(styleType: StyleType): string {
   const styleExt = styleType === 'css' ? '' : ` lang="${styleType}"`;

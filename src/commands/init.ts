@@ -6,8 +6,9 @@ import {
   plugins,
   pluginMap,
   getPluginChoices,
-} from '../plugins/index.js';
-import type { ProjectConfig, CLIOptions, PluginContext, ProjectType, StyleType, StateManagerType, HttpClientType, BundlerType } from '../types/index.js';
+  getMonitoringChoices,
+} from '../plugins';
+import type { ProjectConfig, CLIOptions, PluginContext, ProjectType, StyleType, StateManagerType, HttpClientType, BundlerType, MonitoringType } from '../types';
 import {
   generatePackageJson,
   installDependencies,
@@ -16,7 +17,7 @@ import {
   FileGenerator,
   showBanner,
   showSuccessMessage,
-} from '../utils/index.js';
+} from '../utils';
 import {
   getTemplateChoices,
   getStyleChoices,
@@ -24,9 +25,9 @@ import {
   createProjectStructure,
   getProjectDependencies,
   getProjectScripts,
-} from '../templates/index.js';
-import { getHttpClientChoices } from '../plugins/http-client/index.js';
-import { createVscodeConfig } from '../templates/shared.js';
+} from '../templates';
+import { getHttpClientChoices } from '../plugins/http-client';
+import { createVscodeConfig } from '../templates/shared';
 
 /**
  * 获取用户输入的项目配置
@@ -66,12 +67,16 @@ async function getProjectConfig(
     // HTTP 请求库：命令行指定 > 默认值（axios）
     const httpClient: HttpClientType = (options.httpClient as HttpClientType) || 'axios';
 
+    // 前端监控 SDK：命令行指定 > 默认值（不启用）
+    const monitoring: MonitoringType = (options.monitoring as MonitoringType) || 'none';
+
     return {
       projectName: projectName || options.projectName || path.basename(currentDir),
       projectType,
       styleType,
       stateManager,
       httpClient,
+      monitoring,
       bundler: (projectType === 'react' || projectType === 'vue') ? (options.bundler || 'vite') as BundlerType : 'none',
       useTypeScript: true,
       plugins: defaultPlugins,
@@ -153,6 +158,19 @@ async function getProjectConfig(
       default: options.httpClient || 'axios',
     });
     httpClient = httpAnswer.httpClient as HttpClientType;
+  }
+
+  // 前端监控 SDK 选择（仅 React/Vue 项目）
+  let monitoring: MonitoringType = 'none';
+  if (projectType === 'react' || projectType === 'vue') {
+    const monitoringAnswer = await inquirer.prompt({
+      type: 'list',
+      name: 'monitoring',
+      message: '是否集成前端监控 SDK?',
+      choices: getMonitoringChoices(projectType),
+      default: options.monitoring || 'none',
+    });
+    monitoring = monitoringAnswer.monitoring as MonitoringType;
   }
 
   // 打包工具选择（仅 React/Vue 项目）
@@ -282,6 +300,7 @@ async function getProjectConfig(
     styleType,
     stateManager,
     httpClient,
+    monitoring,
     bundler,
     useTypeScript,
     plugins: selectedPlugins,
@@ -352,7 +371,10 @@ export async function init(projectName: string | undefined, options: CLIOptions)
     logger.info(`状态管理: ${config.stateManager === 'none' ? '无' : config.stateManager}`);
     logger.info(`HTTP 请求库: ${config.httpClient === 'none' ? '无' : config.httpClient}`);
   }
-  logger.info(`选择的插件: ${selectedPlugins.map((p) => p.displayName).join(', ') || '无'}`);
+    logger.info(`选择的插件: ${selectedPlugins.map((p) => p.displayName).join(', ') || '无'}`);
+    if (config.projectType === 'react' || config.projectType === 'vue') {
+      logger.info(`前端监控 SDK: ${config.monitoring === 'none' ? '无' : config.monitoring}`);
+    }
 
   // 创建项目结构
   const spinner = ora('创建项目结构...').start();
@@ -364,6 +386,7 @@ export async function init(projectName: string | undefined, options: CLIOptions)
       styleType: config.styleType,
       stateManager: config.stateManager,
       httpClient: config.httpClient,
+      monitoring: config.monitoring,
       bundler: config.bundler,
       selectedPlugins: config.plugins,
       useTypeScript: config.useTypeScript,
@@ -389,6 +412,7 @@ export async function init(projectName: string | undefined, options: CLIOptions)
     styleType: config.styleType,
     stateManager: config.stateManager,
     httpClient: config.httpClient,
+    monitoring: config.monitoring,
     bundler: config.bundler,
     selectedPlugins: config.plugins,
     useTypeScript: config.useTypeScript,
@@ -427,7 +451,7 @@ export async function init(projectName: string | undefined, options: CLIOptions)
   spinner.start('生成 package.json...');
   try {
     // 合并项目模板的依赖和脚本
-    const templateDeps = getProjectDependencies(config.projectType, config.styleType, config.stateManager, config.httpClient, config.plugins, config.useTypeScript);
+    const templateDeps = getProjectDependencies(config.projectType, config.styleType, config.stateManager, config.httpClient, config.monitoring, config.plugins, config.useTypeScript);
     const templateScripts = getProjectScripts(config.projectType, config.plugins, config.useTypeScript);
 
     await generatePackageJson(

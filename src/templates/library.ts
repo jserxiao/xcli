@@ -1,4 +1,4 @@
-import type { ProjectType, PluginContext, StyleType, StateManagerType, HttpClientType, BundlerType } from '../types/index.js';
+import type { ProjectType, PluginContext, StyleType, StateManagerType, HttpClientType, BundlerType, MonitoringType } from '../types';
 import path from 'path';
 import fs from 'fs-extra';
 
@@ -14,6 +14,7 @@ export interface TemplateGenerator {
     styleType?: StyleType,
     stateManager?: StateManagerType,
     httpClient?: HttpClientType,
+    monitoring?: MonitoringType,
     bundler?: BundlerType,
     useTypeScript?: boolean
   ) => { dependencies: Record<string, string>; devDependencies: Record<string, string> };
@@ -106,7 +107,7 @@ export default {
     }
   },
 
-  getDependencies: (_styleType?: StyleType, _stateManager?: StateManagerType, _httpClient?: HttpClientType, _bundler?: BundlerType, useTypeScript: boolean = true) => {
+  getDependencies: (_styleType?: StyleType, _stateManager?: StateManagerType, _httpClient?: HttpClientType, _monitoring?: MonitoringType, _bundler?: BundlerType, useTypeScript: boolean = true) => {
     const deps: { dependencies: Record<string, string>; devDependencies: Record<string, string> } = {
       dependencies: {},
       devDependencies: {},

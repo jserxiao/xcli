@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
-import type { Plugin, PluginContext, ProjectConfig } from '../types/index.js';
+import type { Plugin, PluginContext, ProjectConfig } from '../types/index';
 
 /**
  * package.json 模板

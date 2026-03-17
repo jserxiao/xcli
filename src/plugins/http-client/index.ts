@@ -1,6 +1,6 @@
-import type { Plugin, PluginContext } from '../../types/index.js';
-import { HTTP_CLIENT_VERSIONS } from '../../constants/index.js';
-import { getAxiosConfig, getFetchConfig } from '../../templates/files/shared/http-client.js';
+import type { Plugin, PluginContext } from '../../types';
+import { HTTP_CLIENT_VERSIONS } from '../../constants';
+import { getAxiosConfig, getFetchConfig } from './templates';
 
 /**
  * Axios 插件

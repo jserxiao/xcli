@@ -1,5 +1,5 @@
-import type { Plugin, PluginContext } from '../../types/index.js';
-import { BUNDLER_VERSIONS, STYLE_VERSIONS } from '../../constants/index.js';
+import type { Plugin, PluginContext } from '../../types';
+import { BUNDLER_VERSIONS, STYLE_VERSIONS } from '../../constants';
 
 /**
  * 获取 React Vite 配置

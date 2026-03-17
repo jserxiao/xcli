@@ -1,11 +1,11 @@
-import type { BundlerType } from '../../../types/index.js';
+import type { BundlerType } from '../../types';
 
 /**
  * Axios 封装配置
  */
 export function getAxiosConfig(bundler: BundlerType = 'vite'): string {
-  const baseUrl = bundler === 'vite' 
-    ? 'import.meta.env.VITE_API_BASE_URL || \'/api\'' 
+  const baseUrl = bundler === 'vite'
+    ? 'import.meta.env.VITE_API_BASE_URL || \'/api\''
     : 'process.env.VITE_API_BASE_URL || \'/api\'';
 
   return `import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
@@ -80,8 +80,8 @@ export default request;
  * Fetch 封装配置
  */
 export function getFetchConfig(bundler: BundlerType = 'vite'): string {
-  const baseUrl = bundler === 'vite' 
-    ? 'import.meta.env.VITE_API_BASE_URL || \'/api\'' 
+  const baseUrl = bundler === 'vite'
+    ? 'import.meta.env.VITE_API_BASE_URL || \'/api\''
     : 'process.env.VITE_API_BASE_URL || \'/api\'';
 
   return `/**

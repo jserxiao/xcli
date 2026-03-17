@@ -1,5 +1,5 @@
-import type { Plugin } from '../../types/index.js';
-import { GIT_VERSIONS } from '../../constants/index.js';
+import type { Plugin } from '../../types';
+import { GIT_VERSIONS } from '../../constants';
 
 export const commitlintPlugin: Plugin = {
   name: 'commitlint',

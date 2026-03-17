@@ -1,6 +1,6 @@
-import type { Plugin, PluginContext, ProjectType, StyleType } from '../../types/index.js';
-import { BUNDLER_VERSIONS, STYLE_VERSIONS, FRAMEWORK_VERSIONS, BABEL_VERSIONS } from '../../constants/index.js';
-import { getLibraryWebpackConfig, getReactWebpackConfig, getVueWebpackConfig } from './config.js';
+import type { Plugin, PluginContext, ProjectType, StyleType } from '../../types';
+import { BUNDLER_VERSIONS, STYLE_VERSIONS, FRAMEWORK_VERSIONS, BABEL_VERSIONS } from '../../constants';
+import { getLibraryWebpackConfig, getReactWebpackConfig, getVueWebpackConfig } from './config';
 
 /**
  * 获取 Webpack 依赖（React 项目）

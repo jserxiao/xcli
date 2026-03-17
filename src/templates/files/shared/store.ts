@@ -1,4 +1,4 @@
-import type { BundlerType } from '../../../types/index.js';
+import type { BundlerType } from '../../../types';
 
 /**
  * Redux Store 模板

@@ -1,5 +1,5 @@
-import type { Plugin } from '../../types/index.js';
-import { LINTER_VERSIONS } from '../../constants/index.js';
+import type { Plugin } from '../../types';
+import { LINTER_VERSIONS } from '../../constants';
 
 export const prettierPlugin: Plugin = {
   name: 'prettier',

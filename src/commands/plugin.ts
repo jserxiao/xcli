@@ -2,10 +2,10 @@ import path from 'path';
 import fs from 'fs-extra';
 import inquirer from 'inquirer';
 import ora from 'ora';
-import { pluginMap, plugins } from '../plugins/index.js';
-import { logger } from '../utils/logger.js';
-import { FileGenerator } from '../utils/fileGenerator.js';
-import type { PluginContext } from '../types/index.js';
+import { pluginMap, plugins } from '../plugins';
+import { logger } from '../utils/logger';
+import { FileGenerator } from '../utils/fileGenerator';
+import type { PluginContext } from '../types';
 
 /**
  * 添加插件
@@ -74,6 +74,7 @@ export async function addPlugin(pluginNames: string[]): Promise<void> {
     styleType: detectedStyleType, // 使用检测到的样式类型
     stateManager: 'none', // 插件管理默认不使用状态管理
     httpClient: 'none', // 插件管理默认不使用 HTTP 请求库
+    monitoring: 'none', // 插件管理默认不使用监控 SDK
     bundler: 'none', // 插件管理默认不使用打包工具
     selectedPlugins: selectedPlugins,
     useTypeScript: true,

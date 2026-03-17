@@ -1,4 +1,4 @@
-import type { StyleType } from '../../../types/index.js';
+import type { StyleType } from '../../../types';
 
 /**
  * 获取基础样式内容

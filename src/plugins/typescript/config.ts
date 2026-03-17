@@ -1,4 +1,4 @@
-import type { PluginContext, BundlerType } from '../../types/index.js';
+import type { PluginContext, BundlerType } from '../../types';
 
 /**
  * React tsconfig 配置

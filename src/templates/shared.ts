@@ -9,13 +9,7 @@ export {
   getBaseStyles,
   getAppStyles,
   getPageStyles,
-} from './files/shared/styles.js';
-
-// 从独立模板文件中导出配置
-export {
-  getAxiosConfig,
-  getFetchConfig,
-} from './files/shared/http-client.js';
+} from './files/shared/styles';
 
 // 从独立模板文件中导出状态管理模板
 export {
@@ -27,18 +21,18 @@ export {
   getMobXStoreIndex,
   getPiniaStoreIndex,
   getPiniaCounterStore,
-} from './files/shared/store.js';
+} from './files/shared/store';
 
 // 从独立模板文件中导出包生成器
 export {
   createSharedPackage,
   createReactUiPackage,
   createVueUiPackage,
-} from './files/shared/packages.js';
+} from './files/shared/packages';
 
 // ============ 配置文件模板（保留在 shared.ts 中，因为它们较为简短） ============
 
-import type { StyleType, BundlerType } from '../types/index.js';
+import type { StyleType, BundlerType } from '../types';
 import path from 'path';
 import fs from 'fs-extra';
 

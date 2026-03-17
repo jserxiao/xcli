@@ -1,8 +1,8 @@
-import type { ProjectType, PluginContext, StyleType, StateManagerType, HttpClientType, BundlerType } from '../types/index.js';
-import { createBaseFiles } from '../utils/fileGenerator.js';
-import { libraryTemplate } from './library.js';
-import { reactTemplate } from './react.js';
-import { vueTemplate } from './vue.js';
+import type { ProjectType, PluginContext, StyleType, StateManagerType, HttpClientType, BundlerType, MonitoringType } from '../types';
+import { createBaseFiles } from '../utils/fileGenerator';
+import { libraryTemplate } from './library';
+import { reactTemplate } from './react';
+import { vueTemplate } from './vue';
 
 /**
  * 获取打包工具类型
@@ -95,6 +95,7 @@ export async function createProjectStructure(
     styleType: context.styleType,
     stateManager: context.stateManager,
     httpClient: context.httpClient,
+    monitoring: context.monitoring,
   });
 }
 
@@ -106,6 +107,7 @@ export function getProjectDependencies(
   styleType: StyleType = 'less',
   stateManager: StateManagerType = 'none',
   httpClient: HttpClientType = 'axios',
+  monitoring: MonitoringType = 'none',
   selectedPlugins: string[] = [],
   useTypeScript: boolean = true
 ) {
@@ -118,10 +120,10 @@ export function getProjectDependencies(
 
   // 如果模板支持样式和状态管理参数
   if (projectType === 'react') {
-    return reactTemplate.getDependencies(styleType, stateManager, httpClient, bundler, useTypeScript);
+    return reactTemplate.getDependencies(styleType, stateManager, httpClient, monitoring, bundler, useTypeScript);
   }
   if (projectType === 'vue') {
-    return vueTemplate.getDependencies(styleType, stateManager, httpClient, bundler, useTypeScript);
+    return vueTemplate.getDependencies(styleType, stateManager, httpClient, monitoring, bundler, useTypeScript);
   }
 
   return template.getDependencies();

@@ -1,7 +1,7 @@
 import { execa } from 'execa';
 import chalk from 'chalk';
 import ora from 'ora';
-import { logger } from '../utils/logger.js';
+import { logger } from '../utils/logger';
 
 // 直接导入 package.json（通过 rollup plugin-json 处理）
 import packageJson from '../../package.json' assert { type: 'json' };

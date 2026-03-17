@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
-import type { Plugin, PluginContext, PluginFile } from '../types/index.js';
-import { getGitignoreContent } from '../templates/shared.js';
+import type { Plugin, PluginContext, PluginFile } from '../types/index';
+import { getGitignoreContent } from '../templates/shared';
 
 /**
  * 文件生成器
@@ -61,7 +61,7 @@ export async function createBaseFiles(
   projectPath: string,
   projectName: string,
   projectType: string,
-  context?: { styleType?: string; stateManager?: string; httpClient?: string }
+  context?: { styleType?: string; stateManager?: string; httpClient?: string; monitoring?: string }
 ): Promise<void> {
   // 使用共享的 gitignore 内容（但保留 library 项目的简化版）
   const isLibrary = projectType === 'library';

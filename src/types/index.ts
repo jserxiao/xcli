@@ -52,6 +52,8 @@ export interface PluginContext {
   stateManager: StateManagerType;
   /** HTTP 请求库 */
   httpClient: HttpClientType;
+  /** 前端监控 SDK */
+  monitoring: MonitoringType;
   /** 打包工具 */
   bundler: BundlerType;
   /** 用户选择的插件列表 */
@@ -85,6 +87,11 @@ export type StateManagerType = 'none' | 'redux' | 'mobx' | 'pinia';
 export type HttpClientType = 'axios' | 'fetch' | 'none';
 
 /**
+ * 前端监控 SDK 类型
+ */
+export type MonitoringType = 'xstat' | 'none';
+
+/**
  * 打包工具类型
  */
 export type BundlerType = 'vite' | 'webpack' | 'rollup' | 'none';
@@ -107,6 +114,8 @@ export interface ProjectConfig {
   stateManager: StateManagerType;
   /** HTTP 请求库 */
   httpClient: HttpClientType;
+  /** 前端监控 SDK */
+  monitoring: MonitoringType;
   /** 打包工具 */
   bundler: BundlerType;
   /** 是否使用 TypeScript */
@@ -137,6 +146,8 @@ export interface CLIOptions {
   stateManager?: 'none' | 'redux' | 'mobx' | 'pinia';
   /** HTTP 请求库 */
   httpClient?: HttpClientType;
+  /** 前端监控 SDK */
+  monitoring?: MonitoringType;
   /** 打包工具 */
   bundler?: BundlerType;
   /** 跳过安装依赖 */

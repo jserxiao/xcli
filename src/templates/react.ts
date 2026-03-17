@@ -1,4 +1,4 @@
-import type { ProjectType, PluginContext, StyleType, StateManagerType, HttpClientType, BundlerType } from '../types/index.js';
+import type { ProjectType, PluginContext, StyleType, StateManagerType, HttpClientType, BundlerType, MonitoringType } from '../types';
 import path from 'path';
 import fs from 'fs-extra';
 import {
@@ -20,19 +20,21 @@ import {
   getReduxLoggerMiddleware,
   getMobXCounterStore,
   getMobXStoreIndex,
-} from './shared.js';
-import { axiosPlugin, fetchPlugin } from '../plugins/http-client/index.js';
-import { getReactViteConfig } from '../plugins/vite/index.js';
+} from './shared';
+import { axiosPlugin, fetchPlugin } from '../plugins/http-client';
+import { getReactMonitoringContent } from '../plugins/monitoring/templates';
+import { getReactViteConfig } from '../plugins/vite';
 import {
   BUNDLER_VERSIONS,
   FRAMEWORK_VERSIONS,
   STYLE_VERSIONS,
   STATE_MANAGER_VERSIONS,
   HTTP_CLIENT_VERSIONS,
+  MONITORING_VERSIONS,
   TS_VERSIONS,
   BABEL_VERSIONS,
   ENV_VERSIONS,
-} from '../constants/index.js';
+} from '../constants';
 
 /**
  * 获取文件扩展名（根据是否使用 TypeScript）
@@ -116,7 +118,7 @@ export const reactTemplate = {
   description: 'React 前端项目 (pnpm monorepo)',
 
   createStructure: async (projectPath: string, context: PluginContext) => {
-    const { styleType = 'css', stateManager = 'none', httpClient = 'axios', bundler = 'vite', selectedPlugins = [], useTypeScript = true } = context;
+    const { styleType = 'css', stateManager = 'none', httpClient = 'axios', monitoring = 'none', bundler = 'vite', selectedPlugins = [], useTypeScript = true } = context;
     const styleExt = getStyleExt(styleType);
     const ext = getExt(useTypeScript, false);
     const jsxExt = getExt(useTypeScript, true);
@@ -238,6 +240,16 @@ export const reactTemplate = {
       );
     }
 
+    // 创建监控工具文件
+    if (monitoring === 'xstat') {
+      await fs.ensureDir(path.join(projectPath, 'src', 'utils'));
+      await fs.writeFile(
+        path.join(projectPath, 'src', 'utils', `monitoring${ext}`),
+        getReactMonitoringContent(useTypeScript, bundler === 'none' ? 'vite' : bundler),
+        'utf-8'
+      );
+    }
+
     // index.html
     const mainFile = useTypeScript ? '/src/main.tsx' : '/src/main.jsx';
     await fs.writeFile(
@@ -268,11 +280,37 @@ import App from './App';
 import './index.${styleExt}';
 `;
 
+    // 添加监控 SDK 导入
+    if (monitoring === 'xstat') {
+      mainContent += `import { initXStat, ReactErrorBoundary } from './utils/monitoring';
+
+// 初始化前端监控
+initXStat({
+  appId: import.meta.env.VITE_APP_ID || 'your-app-id',
+  env: import.meta.env.MODE,
+  version: import.meta.env.VITE_APP_VERSION || '1.0.0',
+});
+`;
+    }
+
     if (stateManager === 'redux') {
       mainContent += `import { store } from './store';
 import { Provider } from 'react-redux';
 `;
-      mainContent += `
+      if (monitoring === 'xstat') {
+        mainContent += `
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <Provider store={store}>
+      <ReactErrorBoundary>
+        <App />
+      </ReactErrorBoundary>
+    </Provider>
+  </React.StrictMode>,
+);
+`;
+      } else {
+        mainContent += `
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Provider store={store}>
@@ -281,14 +319,27 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>,
 );
 `;
+      }
     } else {
-      mainContent += `
+      if (monitoring === 'xstat') {
+        mainContent += `
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <ReactErrorBoundary>
+      <App />
+    </ReactErrorBoundary>
+  </React.StrictMode>,
+);
+`;
+      } else {
+        mainContent += `
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
 );
 `;
+      }
     }
 
     await fs.writeFile(path.join(projectPath, 'src', `main${jsxExt}`), mainContent, 'utf-8');
@@ -605,7 +656,7 @@ export default About;
     }
   },
 
-  getDependencies: (styleType: StyleType = 'css', stateManager: StateManagerType = 'none', httpClient: HttpClientType = 'axios', bundler: BundlerType = 'vite', useTypeScript: boolean = true) => {
+  getDependencies: (styleType: StyleType = 'css', stateManager: StateManagerType = 'none', httpClient: HttpClientType = 'axios', monitoring: MonitoringType = 'none', bundler: BundlerType = 'vite', useTypeScript: boolean = true) => {
     const deps: {
       dependencies: Record<string, string>;
       devDependencies: Record<string, string>;
@@ -685,6 +736,11 @@ export default About;
     // HTTP 请求库依赖
     if (httpClient === 'axios') {
       deps.dependencies['axios'] = HTTP_CLIENT_VERSIONS.axios;
+    }
+
+    // 前端监控 SDK 依赖
+    if (monitoring === 'xstat') {
+      deps.dependencies['@jserxiao/xstat'] = MONITORING_VERSIONS['@jserxiao/xstat'];
     }
 
     if (styleType === 'less') {

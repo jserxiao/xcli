@@ -88,6 +88,11 @@ export const HTTP_CLIENT_VERSIONS = {
   axios: '^1.6.0',
 } as const;
 
+// ============ 前端监控 SDK ============
+export const MONITORING_VERSIONS = {
+  '@jserxiao/xstat': '^1.0.0',
+} as const;
+
 // ============ 样式处理 ============
 export const STYLE_VERSIONS = {
   autoprefixer: '^10.4.17',

@@ -51,6 +51,67 @@ my-project/
 - 📁 **Monorepo** - pnpm workspace 多包管理
 - 🗃️ **状态管理** - 可选 Redux Toolkit / MobX
 - 🌐 **HTTP 请求** - 可选 Axios / Fetch 封装
+- 📊 **前端监控** - 可选集成 @jserxiao/xstat SDK（Error Boundary 错误捕获）
+
+### 项目结构
+
+```
+my-project/
+├── index.html              # HTML 入口
+├── vite.config.ts          # Vite 配置
+├── postcss.config.js       # PostCSS 配置
+├── .browserslistrc         # 浏览器兼容性配置
+├── eslint.config.js        # ESLint 配置 (Flat Config)
+├── tsconfig.json           # TypeScript 配置
+├── pnpm-workspace.yaml     # pnpm workspace 配置
+├── package.json            # 项目配置
+├── public/                 # 静态资源
+│   └── vite.svg
+├── src/                    # 主应用源代码
+│   ├── main.tsx            # 入口文件
+│   ├── App.tsx             # 根组件
+│   ├── index.css           # 全局样式
+│   ├── pages/              # 页面组件
+│   │   ├── Home.tsx
+│   │   └── About.tsx
+│   ├── components/         # 通用组件
+│   │   └── Layout.tsx
+│   ├── router/             # 路由配置
+│   │   └── index.tsx
+│   ├── api/                # API 请求封装
+│   │   └── request.ts      # HTTP 请求封装
+│   ├── store/              # 状态管理 (可选)
+│   │   └── ...
+│   ├── utils/              # 工具函数
+│   │   └── monitoring.ts   # 前端监控 SDK 封装（可选）
+│   └── assets/             # 静态资源
+└── packages/               # monorepo 其他包
+    ├── shared/             # 共享工具库
+    └── ui/                 # UI 组件库
+```
+
+### 前端监控集成
+
+React 模板支持集成 `@jserxiao/xstat` 前端监控 SDK：
+
+```bash
+xcli i my-app -t react --monitoring xstat -d
+```
+
+**监控文件结构**：
+
+```
+src/utils/
+└── monitoring.ts       # XStat SDK 封装
+    ├── initXStat()     # 初始化监控
+    ├── ReactErrorBoundary  # 错误边界组件
+    ├── reportError()   # 手动上报错误
+    └── reportEvent()   # 上报自定义事件
+```
+
+**React 错误处理**：使用 Error Boundary 组件包裹应用，捕获渲染错误并上报。
+
+详见 [init 命令 - 前端监控 SDK](../commands/init.md#前端监控-sdk)
 
 ### 状态管理选项
 
@@ -170,6 +231,66 @@ my-project/
 - 📁 **Monorepo** - pnpm workspace 多包管理
 - 🗃️ **Pinia** - Vue 官方状态管理（默认集成）
 - 🌐 **HTTP 请求** - 可选 Axios / Fetch 封装
+- 📊 **前端监控** - 可选集成 @jserxiao/xstat SDK（全局错误处理器）
+
+### 项目结构
+
+```
+my-project/
+├── index.html              # HTML 入口
+├── vite.config.ts          # Vite 配置
+├── postcss.config.js       # PostCSS 配置
+├── .browserslistrc         # 浏览器兼容性配置
+├── eslint.config.js        # ESLint 配置 (Flat Config)
+├── tsconfig.json           # TypeScript 配置
+├── pnpm-workspace.yaml     # pnpm workspace 配置
+├── package.json            # 项目配置
+├── public/                 # 静态资源
+│   └── vite.svg
+├── src/                    # 主应用源代码
+│   ├── main.ts             # 入口文件
+│   ├── App.vue             # 根组件
+│   ├── style.css           # 全局样式
+│   ├── pages/              # 页面组件
+│   │   ├── Home.vue
+│   │   └── About.vue
+│   ├── components/         # 通用组件
+│   ├── router/             # 路由配置
+│   │   └── index.ts
+│   ├── api/                # API 请求封装
+│   │   └── request.ts      # HTTP 请求封装
+│   ├── store/              # Pinia 状态管理
+│   │   └── ...
+│   ├── utils/              # 工具函数
+│   │   └── monitoring.ts   # 前端监控 SDK 封装（可选）
+│   └── assets/             # 静态资源
+└── packages/               # monorepo 其他包
+    ├── shared/             # 共享工具库
+    └── ui/                 # UI 组件库
+```
+
+### 前端监控集成
+
+Vue 模板支持集成 `@jserxiao/xstat` 前端监控 SDK：
+
+```bash
+xcli i my-app -t vue --monitoring xstat -d
+```
+
+**监控文件结构**：
+
+```
+src/utils/
+└── monitoring.ts       # XStat SDK 封装
+    ├── initXStat()     # 初始化监控
+    ├── vueErrorHandler # Vue 全局错误处理器
+    ├── reportError()   # 手动上报错误
+    └── reportEvent()   # 上报自定义事件
+```
+
+**Vue 错误处理**：使用 `app.config.errorHandler` 全局捕获组件错误并上报。
+
+详见 [init 命令 - 前端监控 SDK](../commands/init.md#前端监控-sdk)
 
 ### Pinia 状态管理
 

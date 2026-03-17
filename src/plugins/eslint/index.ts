@@ -1,6 +1,6 @@
-import type { Plugin, PluginContext } from '../../types/index.js';
-import { LINTER_VERSIONS } from '../../constants/index.js';
-import { getEslintConfig } from './config.js';
+import type { Plugin, PluginContext } from '../../types';
+import { LINTER_VERSIONS } from '../../constants';
+import { getEslintConfig } from './config';
 
 /**
  * 根据项目类型获取 ESLint 依赖

@@ -1,5 +1,5 @@
-import type { StyleType } from '../../../types/index.js';
-import { getPageStyles } from './styles.js';
+import type { StyleType } from '../../../types';
+import { getPageStyles } from './styles';
 
 export function getAboutVue(styleType: StyleType, projectName: string): string {
   const styleExt = styleType === 'css' ? '' : ` lang="${styleType}"`;

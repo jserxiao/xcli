@@ -1,2 +1,2 @@
-export * from './init.js';
-export * from './plugin.js';
+export * from './init';
+export * from './plugin';

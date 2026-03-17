@@ -1,4 +1,4 @@
-import type { PluginContext } from '../../types/index.js';
+import type { PluginContext } from '../../types';
 
 /**
  * React ESLint 配置

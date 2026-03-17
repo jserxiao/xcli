@@ -24,6 +24,7 @@ xcli i [projectName] [options]
 | `--style <type>` | `-s` | `less` | 样式预处理器 |
 | `--state-manager <type>` | `-m` | - | 状态管理方案 |
 | `--http-client <type>` | `-h` | `axios` | HTTP 请求库 |
+| `--monitoring <type>` | `-M` | `none` | 前端监控 SDK（仅 React/Vue） |
 | `--bundler <type>` | `-b` | `vite` | 打包工具（仅 React/Vue） |
 | `--package-manager <name>` | `-p` | `pnpm` | 包管理器 |
 | `--skip-install` | `-si` | `false` | 跳过依赖安装 |
@@ -214,6 +215,127 @@ xcli i my-app -t react --http-client fetch -d
 
 # 不使用 HTTP 请求库
 xcli i my-app -t react -h none -d
+```
+
+## 前端监控 SDK
+
+React/Vue 项目可选择集成前端监控 SDK：
+
+| 选项 | 说明 |
+|------|------|
+| `none` | 不集成监控（默认） |
+| `xstat` | @jserxiao/xstat - 前端性能监控 SDK |
+
+### XStat 监控特性
+
+集成 `@jserxiao/xstat` SDK，提供全方位的前端监控能力：
+
+- 📊 **性能监控** - 页面加载性能、资源加载时间、FP/FCP 等核心指标
+- 🐛 **错误监控** - JavaScript 错误、Promise 错误、资源加载错误
+- 🌐 **请求监控** - Fetch/XHR 请求拦截，自动上报请求耗时和错误
+- 🖱️ **行为监控** - 用户点击、路由切换等行为追踪
+
+### 打包工具兼容性
+
+监控 SDK 自动适配不同的打包工具：
+
+| 打包工具 | 环境变量访问方式 | 说明 |
+|---------|-----------------|------|
+| **Vite** | `import.meta.env.*` | 现代 ES 模块方式 |
+| **Webpack** | `process.env.*` | 传统 Node.js 方式 |
+| **Rollup** | `import.meta.env.*` | 与 Vite 一致 |
+
+### React 项目集成
+
+React 项目使用 **Error Boundary** 捕获组件错误：
+
+```tsx
+// src/main.tsx
+import { initXStat, ReactErrorBoundary } from './utils/monitoring';
+
+// 初始化监控
+initXStat({
+  appId: import.meta.env.VITE_APP_ID || 'your-app-id',  // Vite 使用 import.meta.env
+  // appId: process.env.APP_ID || 'your-app-id',        // Webpack 使用 process.env
+  env: import.meta.env.MODE,
+  version: import.meta.env.VITE_APP_VERSION || '1.0.0',
+});
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <ReactErrorBoundary>
+      <App />
+    </ReactErrorBoundary>
+  </React.StrictMode>,
+);
+```
+
+**React 错误处理特点**：
+- 使用 `ReactErrorBoundary` 类组件包裹应用
+- 捕获渲染错误、生命周期错误
+- 自动上报错误信息和组件栈
+- 提供降级 UI 展示
+
+### Vue 项目集成
+
+Vue 项目使用 **全局错误处理器** 捕获错误：
+
+```ts
+// src/main.ts
+import { initXStat, vueErrorHandler } from './utils/monitoring';
+
+// 初始化监控
+initXStat({
+  appId: import.meta.env.VITE_APP_ID || 'your-app-id',  // Vite 使用 import.meta.env
+  // appId: process.env.APP_ID || 'your-app-id',        // Webpack 使用 process.env
+  env: import.meta.env.MODE,
+  version: import.meta.env.VITE_APP_VERSION || '1.0.0',
+});
+
+const app = createApp(App);
+
+// 配置 Vue 错误处理
+app.config.errorHandler = vueErrorHandler;
+
+app.use(router);
+app.mount('#app');
+```
+
+**Vue 错误处理特点**：
+- 使用 `app.config.errorHandler` 全局捕获
+- 捕获组件渲染错误、事件处理器错误
+- 自动获取组件名称和错误信息
+- 支持异步错误追踪
+
+### 手动上报
+
+在业务代码中可以手动上报自定义事件或错误：
+
+```ts
+import { reportEvent, reportError } from './utils/monitoring';
+
+// 上报自定义事件
+reportEvent('user_action', {
+  action: 'click_buy_button',
+  productId: '12345',
+});
+
+// 手动上报错误
+try {
+  riskyOperation();
+} catch (error) {
+  reportError(error, { extra: 'context' });
+}
+```
+
+### 使用示例
+
+```bash
+# 集成监控 SDK
+xcli i my-app -t react --monitoring xstat -d
+
+# 不集成监控（默认）
+xcli i my-app -t react -d
 ```
 
 ## 打包工具

@@ -1,5 +1,5 @@
-import type { Plugin, StyleType } from '../../types/index.js';
-import { LINTER_VERSIONS } from '../../constants/index.js';
+import type { Plugin, StyleType } from '../../types';
+import { LINTER_VERSIONS } from '../../constants';
 
 /**
  * 获取 Stylelint 配置

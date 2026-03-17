@@ -1,5 +1,5 @@
-import type { Plugin } from '../../types/index.js';
-import { TEST_VERSIONS } from '../../constants/index.js';
+import type { Plugin } from '../../types';
+import { TEST_VERSIONS } from '../../constants';
 
 export const jestPlugin: Plugin = {
   name: 'jest',

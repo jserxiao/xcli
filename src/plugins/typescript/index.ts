@@ -1,6 +1,6 @@
-import type { Plugin } from '../../types/index.js';
-import { TS_VERSIONS } from '../../constants/index.js';
-import { getTsConfig } from './config.js';
+import type { Plugin } from '../../types';
+import { TS_VERSIONS } from '../../constants';
+import { getTsConfig } from './config';
 
 export const typescriptPlugin: Plugin = {
   name: 'typescript',

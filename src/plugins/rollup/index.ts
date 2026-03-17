@@ -1,5 +1,5 @@
-import type { Plugin } from '../../types/index.js';
-import { BUNDLER_VERSIONS } from '../../constants/index.js';
+import type { Plugin } from '../../types';
+import { BUNDLER_VERSIONS } from '../../constants';
 
 export const rollupPlugin: Plugin = {
   name: 'rollup',

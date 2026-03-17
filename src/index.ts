@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { init } from './commands/init.js';
-import { addPlugin, removePlugin, listPlugins } from './commands/plugin.js';
-import { upgrade, showVersion, CURRENT_VERSION } from './commands/upgrade.js';
-import { logger, showMiniBanner } from './utils/logger.js';
+import { init } from './commands/init';
+import { addPlugin, removePlugin, listPlugins } from './commands/plugin';
+import { upgrade, showVersion, CURRENT_VERSION } from './commands/upgrade';
+import { logger, showMiniBanner } from './utils/logger';
 
 const program = new Command();
 
@@ -31,6 +31,7 @@ program
   .option('-s, --style <type>', '样式预处理器 (css/less/scss)')
   .option('-m, --state-manager <type>', '状态管理 (none/redux/mobx/pinia)')
   .option('-h, --http-client <type>', 'HTTP 请求库 (axios/fetch/none)')
+  .option('-M, --monitoring <type>', '前端监控 SDK (none/xstat)')
   .option('-b, --bundler <type>', '打包工具 (vite/webpack/rollup/none)')
   .option('-p, --package-manager <manager>', '包管理器 (npm/yarn/pnpm)', 'pnpm')
   .option('-si, --skip-install', '跳过依赖安装')
