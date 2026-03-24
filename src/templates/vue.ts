@@ -236,6 +236,7 @@ export const vueTemplate = {
 import './style.${styleExt}';
 import App from './App.vue';
 import router from './router';
+${stateManager === 'pinia' ? "import { pinia } from './store';" : ''}
 ${monitoring === 'xstat' ? "import { initXStat } from './utils/monitoring';" : ''}
 `;
 
